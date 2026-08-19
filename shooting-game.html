@@ -106,7 +106,7 @@
         }
 
         .info {
-            position: absolute;
+            position: fixed;
             top: 10px;
             left: 10px;
             color: #fff;
@@ -137,442 +137,430 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d', { antialias: false });
+        try {
+            const canvas = document.getElementById('gameCanvas');
+            if (!canvas) throw new Error('Canvas not found');
 
-        // 캔버스 크기 설정
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
+            const ctx = canvas.getContext('2d', { antialias: false });
+            if (!ctx) throw new Error('Canvas context failed');
 
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('orientationchange', () => {
-            setTimeout(resizeCanvas, 100);
-        });
-
-        // 게임 설정
-        let GAME_WIDTH = canvas.width;
-        let GAME_HEIGHT = canvas.height;
-
-        // 게임 상태
-        let gameState = {
-            score: 0,
-            hp: 3,
-            stage: 1,
-            gameOver: false,
-            won: false
-        };
-
-        // 플레이어 클래스
-        class Player {
-            constructor() {
-                this.x = GAME_WIDTH / 2;
-                this.y = GAME_HEIGHT - 60;
-                this.width = 24;
-                this.height = 24;
-                this.speed = 5;
-                this.shooting = false;
+            // 캔버스 크기 설정
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
             }
 
-            update(input) {
-                if (input.left && this.x > 10) {
-                    this.x -= this.speed;
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(resizeCanvas, 100);
+            });
+
+            // 게임 설정
+            let GAME_WIDTH = canvas.width;
+            let GAME_HEIGHT = canvas.height;
+
+            // 게임 상태
+            let gameState = {
+                score: 0,
+                hp: 3,
+                stage: 1,
+                gameOver: false,
+                won: false
+            };
+
+            // 플레이어 클래스
+            class Player {
+                constructor() {
+                    this.x = GAME_WIDTH / 2;
+                    this.y = GAME_HEIGHT - 60;
+                    this.width = 24;
+                    this.height = 24;
+                    this.speed = 5;
                 }
-                if (input.right && this.x < GAME_WIDTH - 10) {
-                    this.x += this.speed;
-                }
-            }
 
-            draw() {
-                // 픽셀 비행기 그리기
-                ctx.fillStyle = '#FFD700';
-                ctx.fillRect(this.x - 8, this.y - 12, 16, 24); // 몸
-                ctx.fillStyle = '#FFA500';
-                ctx.fillRect(this.x - 12, this.y - 4, 8, 8);  // 왼쪽 날개
-                ctx.fillRect(this.x + 4, this.y - 4, 8, 8);   // 오른쪽 날개
-                ctx.fillStyle = '#FF6B6B';
-                ctx.fillRect(this.x - 2, this.y - 16, 4, 4);  // 포탑
-            }
-        }
-
-        // 총알 클래스
-        class Bullet {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.width = 4;
-                this.height = 8;
-                this.speed = 8;
-            }
-
-            update() {
-                this.y -= this.speed;
-            }
-
-            draw() {
-                ctx.fillStyle = '#FFD700';
-                ctx.fillRect(this.x - 2, this.y, 4, 8);
-            }
-
-            isOffScreen() {
-                return this.y < 0;
-            }
-        }
-
-        // 적 총알 클래스
-        class EnemyBullet {
-            constructor(x, y, vx = 0, vy = 3) {
-                this.x = x;
-                this.y = y;
-                this.vx = vx;
-                this.vy = vy;
-                this.radius = 3;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-            }
-
-            draw() {
-                ctx.fillStyle = '#FF6B6B';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            isOffScreen() {
-                return this.y > GAME_HEIGHT;
-            }
-        }
-
-        // 보스 클래스
-        class Boss {
-            constructor(stageNum) {
-                this.stageNum = stageNum;
-                this.x = GAME_WIDTH / 2;
-                this.y = 80;
-                this.width = 40;
-                this.height = 40;
-                this.maxHp = 50 + stageNum * 20;
-                this.hp = this.maxHp;
-                this.shootCounter = 0;
-                this.moveCounter = 0;
-                this.speed = 1 + stageNum * 0.3;
-                this.shootInterval = Math.max(20, 60 - stageNum * 4);
-            }
-
-            update() {
-                // 좌우 이동
-                this.moveCounter++;
-                this.x += Math.sin(this.moveCounter * 0.02) * this.speed;
-
-                // 경계 처리
-                if (this.x < this.width / 2) this.x = this.width / 2;
-                if (this.x > GAME_WIDTH - this.width / 2) this.x = GAME_WIDTH - this.width / 2;
-
-                this.shootCounter++;
-            }
-
-            shoot() {
-                const bullets = [];
-
-                if (this.stageNum <= 3) {
-                    // 스테이지 1-3: 직진
-                    bullets.push(new EnemyBullet(this.x, this.y, 0, 3));
-                } else if (this.stageNum <= 6) {
-                    // 스테이지 4-6: 패턴 공격
-                    for (let i = -2; i <= 2; i++) {
-                        bullets.push(new EnemyBullet(this.x + i * 15, this.y, i * 1, 3));
+                update(input) {
+                    if (input.left && this.x > 10) {
+                        this.x -= this.speed;
                     }
-                } else {
-                    // 스테이지 7-10: 복잡한 패턴
-                    const angle = (this.shootCounter * 0.05) % (Math.PI * 2);
-                    for (let i = 0; i < 6; i++) {
-                        const a = angle + (Math.PI * 2 / 6) * i;
-                        bullets.push(new EnemyBullet(
-                            this.x + Math.cos(a) * 10,
-                            this.y + Math.sin(a) * 10,
-                            Math.cos(a + Math.PI / 2) * 2,
-                            Math.sin(a + Math.PI / 2) * 2 + 1
-                        ));
+                    if (input.right && this.x < GAME_WIDTH - 10) {
+                        this.x += this.speed;
                     }
                 }
 
-                return bullets;
+                draw() {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(this.x - 8, this.y - 12, 16, 24);
+                    ctx.fillStyle = '#FFA500';
+                    ctx.fillRect(this.x - 12, this.y - 4, 8, 8);
+                    ctx.fillRect(this.x + 4, this.y - 4, 8, 8);
+                    ctx.fillStyle = '#FF6B6B';
+                    ctx.fillRect(this.x - 2, this.y - 16, 4, 4);
+                }
             }
 
-            draw() {
-                ctx.fillStyle = '#FF4444';
-                ctx.fillRect(this.x - 20, this.y - 20, 40, 40); // 몸
+            // 총알 클래스
+            class Bullet {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.width = 4;
+                    this.height = 8;
+                    this.speed = 8;
+                }
 
-                ctx.fillStyle = '#FF8800';
-                ctx.fillRect(this.x - 16, this.y - 16, 10, 10); // 왼쪽 캐논
-                ctx.fillRect(this.x + 6, this.y - 16, 10, 10);  // 오른쪽 캐논
+                update() {
+                    this.y -= this.speed;
+                }
 
-                ctx.fillStyle = '#FFD700';
-                ctx.fillRect(this.x - 8, this.y - 8, 16, 16);   // 중앙
+                draw() {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(this.x - 2, this.y, 4, 8);
+                }
 
-                // HP 바
-                const hpPercent = this.hp / this.maxHp;
-                ctx.fillStyle = '#FF0000';
-                ctx.fillRect(this.x - 20, this.y - 28, 40, 4);
-                ctx.fillStyle = '#00FF00';
-                ctx.fillRect(this.x - 20, this.y - 28, 40 * hpPercent, 4);
+                isOffScreen() {
+                    return this.y < 0;
+                }
             }
 
-            isDefeated() {
-                return this.hp <= 0;
-            }
-        }
+            // 적 총알 클래스
+            class EnemyBullet {
+                constructor(x, y, vx = 0, vy = 3) {
+                    this.x = x;
+                    this.y = y;
+                    this.vx = vx;
+                    this.vy = vy;
+                    this.radius = 3;
+                }
 
-        // 폭발 효과
-        class Explosion {
-            constructor(x, y, size = 20) {
-                this.x = x;
-                this.y = y;
-                this.size = size;
-                this.maxSize = size;
-                this.maxDuration = 10;
-                this.duration = 0;
-            }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                }
 
-            update() {
-                this.duration++;
-            }
+                draw() {
+                    ctx.fillStyle = '#FF6B6B';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
 
-            draw() {
-                const progress = this.duration / this.maxDuration;
-                const currentSize = this.maxSize * (1 + progress);
-
-                ctx.fillStyle = `rgba(255, 100, 0, ${1 - progress})`;
-                ctx.fillRect(this.x - currentSize/2, this.y - currentSize/2, currentSize, currentSize);
-
-                ctx.fillStyle = `rgba(255, 200, 0, ${0.8 - progress * 0.8})`;
-                ctx.fillRect(this.x - currentSize/3, this.y - currentSize/3, currentSize*2/3, currentSize*2/3);
+                isOffScreen() {
+                    return this.y > GAME_HEIGHT;
+                }
             }
 
-            isFinished() {
-                return this.duration >= this.maxDuration;
+            // 보스 클래스
+            class Boss {
+                constructor(stageNum) {
+                    this.stageNum = stageNum;
+                    this.x = GAME_WIDTH / 2;
+                    this.y = 80;
+                    this.width = 40;
+                    this.height = 40;
+                    this.maxHp = 50 + stageNum * 20;
+                    this.hp = this.maxHp;
+                    this.shootCounter = 0;
+                    this.moveCounter = 0;
+                    this.speed = 1 + stageNum * 0.3;
+                    this.shootInterval = Math.max(20, 60 - stageNum * 4);
+                }
+
+                update() {
+                    this.moveCounter++;
+                    this.x += Math.sin(this.moveCounter * 0.02) * this.speed;
+
+                    if (this.x < this.width / 2) this.x = this.width / 2;
+                    if (this.x > GAME_WIDTH - this.width / 2) this.x = GAME_WIDTH - this.width / 2;
+
+                    this.shootCounter++;
+                }
+
+                shoot() {
+                    const bullets = [];
+
+                    if (this.stageNum <= 3) {
+                        bullets.push(new EnemyBullet(this.x, this.y, 0, 3));
+                    } else if (this.stageNum <= 6) {
+                        for (let i = -2; i <= 2; i++) {
+                            bullets.push(new EnemyBullet(this.x + i * 15, this.y, i * 1, 3));
+                        }
+                    } else {
+                        const angle = (this.shootCounter * 0.05) % (Math.PI * 2);
+                        for (let i = 0; i < 6; i++) {
+                            const a = angle + (Math.PI * 2 / 6) * i;
+                            bullets.push(new EnemyBullet(
+                                this.x + Math.cos(a) * 10,
+                                this.y + Math.sin(a) * 10,
+                                Math.cos(a + Math.PI / 2) * 2,
+                                Math.sin(a + Math.PI / 2) * 2 + 1
+                            ));
+                        }
+                    }
+
+                    return bullets;
+                }
+
+                draw() {
+                    ctx.fillStyle = '#FF4444';
+                    ctx.fillRect(this.x - 20, this.y - 20, 40, 40);
+
+                    ctx.fillStyle = '#FF8800';
+                    ctx.fillRect(this.x - 16, this.y - 16, 10, 10);
+                    ctx.fillRect(this.x + 6, this.y - 16, 10, 10);
+
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(this.x - 8, this.y - 8, 16, 16);
+
+                    const hpPercent = this.hp / this.maxHp;
+                    ctx.fillStyle = '#FF0000';
+                    ctx.fillRect(this.x - 20, this.y - 28, 40, 4);
+                    ctx.fillStyle = '#00FF00';
+                    ctx.fillRect(this.x - 20, this.y - 28, 40 * hpPercent, 4);
+                }
+
+                isDefeated() {
+                    return this.hp <= 0;
+                }
             }
-        }
 
-        // 게임 객체들
-        let player = new Player();
-        let bullets = [];
-        let enemyBullets = [];
-        let boss = new Boss(gameState.stage);
-        let explosions = [];
+            // 폭발 효과
+            class Explosion {
+                constructor(x, y, size = 20) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = size;
+                    this.maxSize = size;
+                    this.maxDuration = 10;
+                    this.duration = 0;
+                }
 
-        // 입력 처리
-        const input = { left: false, right: false };
+                update() {
+                    this.duration++;
+                }
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') input.left = true;
-            if (e.key === 'ArrowRight') input.right = true;
-        });
+                draw() {
+                    const progress = this.duration / this.maxDuration;
+                    const currentSize = this.maxSize * (1 + progress);
 
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft') input.left = false;
-            if (e.key === 'ArrowRight') input.right = false;
-        });
+                    ctx.fillStyle = `rgba(255, 100, 0, ${1 - progress})`;
+                    ctx.fillRect(this.x - currentSize/2, this.y - currentSize/2, currentSize, currentSize);
 
-        // 터치 입력 처리 (모바일)
-        let touchX = GAME_WIDTH / 2;
+                    ctx.fillStyle = `rgba(255, 200, 0, ${0.8 - progress * 0.8})`;
+                    ctx.fillRect(this.x - currentSize/3, this.y - currentSize/3, currentSize*2/3, currentSize*2/3);
+                }
 
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 0) {
-                touchX = (e.touches[0].clientX / window.innerWidth) * GAME_WIDTH;
+                isFinished() {
+                    return this.duration >= this.maxDuration;
+                }
             }
-        }, { passive: false });
 
-        document.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if (e.touches.length > 0) {
-                touchX = (e.touches[0].clientX / window.innerWidth) * GAME_WIDTH;
+            // 게임 객체들
+            let player = new Player();
+            let bullets = [];
+            let enemyBullets = [];
+            let boss = new Boss(gameState.stage);
+            let explosions = [];
+
+            // 입력 처리
+            const input = { left: false, right: false };
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') input.left = true;
+                if (e.key === 'ArrowRight') input.right = true;
+            });
+
+            document.addEventListener('keyup', (e) => {
+                if (e.key === 'ArrowLeft') input.left = false;
+                if (e.key === 'ArrowRight') input.right = false;
+            });
+
+            // 터치 입력
+            let touchX = GAME_WIDTH / 2;
+
+            document.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 0) {
+                    touchX = (e.touches[0].clientX / window.innerWidth) * GAME_WIDTH;
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (e.touches.length > 0) {
+                    touchX = (e.touches[0].clientX / window.innerWidth) * GAME_WIDTH;
+                    const centerX = GAME_WIDTH / 2;
+                    input.left = touchX < centerX - 50;
+                    input.right = touchX > centerX + 50;
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchend', (e) => {
+                input.left = false;
+                input.right = false;
+            }, { passive: false });
+
+            // 마우스 입력
+            document.addEventListener('mousemove', (e) => {
+                const mouseX = (e.clientX / window.innerWidth) * GAME_WIDTH;
                 const centerX = GAME_WIDTH / 2;
-                input.left = touchX < centerX - 50;
-                input.right = touchX > centerX + 50;
-            }
-        }, { passive: false });
 
-        document.addEventListener('touchend', (e) => {
-            input.left = false;
-            input.right = false;
-        }, { passive: false });
-
-        // 마우스 입력 처리
-        document.addEventListener('mousemove', (e) => {
-            const mouseX = (e.clientX / window.innerWidth) * GAME_WIDTH;
-            const centerX = GAME_WIDTH / 2;
-
-            input.left = mouseX < centerX - 50;
-            input.right = mouseX > centerX + 50;
-        });
-
-        // 게임 업데이트
-        function update() {
-            if (gameState.gameOver) return;
-
-            player.update(input);
-
-            // 총알 발사
-            if (Math.random() < 0.1) {
-                bullets.push(new Bullet(player.x, player.y - 15));
-            }
-
-            // 총알 업데이트
-            bullets = bullets.filter(b => {
-                b.update();
-                return !b.isOffScreen();
+                input.left = mouseX < centerX - 50;
+                input.right = mouseX > centerX + 50;
             });
 
-            // 보스 업데이트
-            boss.update();
+            // 게임 업데이트
+            function update() {
+                if (gameState.gameOver) return;
 
-            // 보스 공격
-            if (boss.shootCounter % boss.shootInterval === 0) {
-                const newBullets = boss.shoot();
-                enemyBullets.push(...newBullets);
-            }
+                player.update(input);
 
-            // 적 총알 업데이트
-            enemyBullets = enemyBullets.filter(b => {
-                b.update();
-                return !b.isOffScreen();
-            });
+                if (Math.random() < 0.1) {
+                    bullets.push(new Bullet(player.x, player.y - 15));
+                }
 
-            // 충돌 감지 - 플레이어 총알 vs 보스
-            bullets = bullets.filter(bullet => {
-                for (let i = 0; i < enemyBullets.length; i++) {
-                    const eb = enemyBullets[i];
-                    if (Math.hypot(bullet.x - eb.x, bullet.y - eb.y) < 10) {
-                        enemyBullets.splice(i, 1);
-                        explosions.push(new Explosion(bullet.x, bullet.y, 12));
+                bullets = bullets.filter(b => {
+                    b.update();
+                    return !b.isOffScreen();
+                });
+
+                boss.update();
+
+                if (boss.shootCounter % boss.shootInterval === 0) {
+                    const newBullets = boss.shoot();
+                    enemyBullets.push(...newBullets);
+                }
+
+                enemyBullets = enemyBullets.filter(b => {
+                    b.update();
+                    return !b.isOffScreen();
+                });
+
+                bullets = bullets.filter(bullet => {
+                    for (let i = 0; i < enemyBullets.length; i++) {
+                        const eb = enemyBullets[i];
+                        if (Math.hypot(bullet.x - eb.x, bullet.y - eb.y) < 10) {
+                            enemyBullets.splice(i, 1);
+                            explosions.push(new Explosion(bullet.x, bullet.y, 12));
+                            return false;
+                        }
+                    }
+
+                    if (bullet.x > boss.x - boss.width/2 &&
+                        bullet.x < boss.x + boss.width/2 &&
+                        bullet.y > boss.y - boss.height/2 &&
+                        bullet.y < boss.y + boss.height/2) {
+                        boss.hp--;
+                        explosions.push(new Explosion(bullet.x, bullet.y, 15));
+                        gameState.score += 10;
                         return false;
                     }
-                }
 
-                if (bullet.x > boss.x - boss.width/2 &&
-                    bullet.x < boss.x + boss.width/2 &&
-                    bullet.y > boss.y - boss.height/2 &&
-                    bullet.y < boss.y + boss.height/2) {
-                    boss.hp--;
-                    explosions.push(new Explosion(bullet.x, bullet.y, 15));
-                    gameState.score += 10;
-                    return false;
-                }
+                    return true;
+                });
 
-                return true;
-            });
+                for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                    const eb = enemyBullets[i];
+                    if (Math.hypot(player.x - eb.x, player.y - eb.y) < 15) {
+                        enemyBullets.splice(i, 1);
+                        gameState.hp--;
+                        explosions.push(new Explosion(player.x, player.y, 20));
+                        gameState.score = Math.max(0, gameState.score - 50);
 
-            // 충돌 감지 - 플레이어 vs 적 총알
-            for (let i = enemyBullets.length - 1; i >= 0; i--) {
-                const eb = enemyBullets[i];
-                if (Math.hypot(player.x - eb.x, player.y - eb.y) < 15) {
-                    enemyBullets.splice(i, 1);
-                    gameState.hp--;
-                    explosions.push(new Explosion(player.x, player.y, 20));
-                    gameState.score = Math.max(0, gameState.score - 50);
-
-                    if (gameState.hp <= 0) {
-                        gameState.gameOver = true;
-                        showGameOver();
+                        if (gameState.hp <= 0) {
+                            gameState.gameOver = true;
+                            showGameOver();
+                        }
                     }
                 }
-            }
 
-            // 폭발 업데이트
-            explosions = explosions.filter(e => {
-                e.update();
-                return !e.isFinished();
-            });
+                explosions = explosions.filter(e => {
+                    e.update();
+                    return !e.isFinished();
+                });
 
-            // 보스 패배 처리
-            if (boss.isDefeated()) {
-                gameState.score += 500 * gameState.stage;
+                if (boss.isDefeated()) {
+                    gameState.score += 500 * gameState.stage;
 
-                if (gameState.stage >= 10) {
-                    gameState.won = true;
-                    gameState.gameOver = true;
-                    showGameOver();
-                } else {
-                    gameState.stage++;
-                    boss = new Boss(gameState.stage);
-                    enemyBullets = [];
-                    bullets = [];
-                    explosions = [];
+                    if (gameState.stage >= 10) {
+                        gameState.won = true;
+                        gameState.gameOver = true;
+                        showGameOver();
+                    } else {
+                        gameState.stage++;
+                        boss = new Boss(gameState.stage);
+                        enemyBullets = [];
+                        bullets = [];
+                        explosions = [];
+                    }
                 }
+
+                document.getElementById('score').textContent = gameState.score;
+                document.getElementById('hp').textContent = gameState.hp;
+                document.getElementById('stage').textContent = gameState.stage;
             }
 
-            // UI 업데이트
-            document.getElementById('score').textContent = gameState.score;
-            document.getElementById('hp').textContent = gameState.hp;
-            document.getElementById('stage').textContent = gameState.stage;
-        }
+            // 게임 그리기
+            function draw() {
+                GAME_WIDTH = canvas.width;
+                GAME_HEIGHT = canvas.height;
 
-        // 게임 그리기
-        function draw() {
-            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 배경 그라데이션
-            const gradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
-            gradient.addColorStop(0, '#87CEEB');
-            gradient.addColorStop(1, '#1a1a2e');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                const gradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#1a1a2e');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 별 배경
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            for (let i = 0; i < 30; i++) {
-                const x = (i * 73 + gameState.score * 0.1) % GAME_WIDTH;
-                const y = (i * 37) % GAME_HEIGHT;
-                ctx.fillRect(x, y, 2, 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                for (let i = 0; i < 30; i++) {
+                    const x = (i * 73 + gameState.score * 0.1) % GAME_WIDTH;
+                    const y = (i * 37) % GAME_HEIGHT;
+                    ctx.fillRect(x, y, 2, 2);
+                }
+
+                player.draw();
+                boss.draw();
+
+                bullets.forEach(b => b.draw());
+                enemyBullets.forEach(b => b.draw());
+                explosions.forEach(e => e.draw());
             }
 
-            // 게임 객체 그리기
-            player.draw();
-            boss.draw();
+            function showGameOver() {
+                const gameOverScreen = document.getElementById('gameOverScreen');
+                document.getElementById('finalScore').textContent = gameState.score;
+                document.getElementById('finalStage').textContent = gameState.stage;
 
-            bullets.forEach(b => b.draw());
-            enemyBullets.forEach(b => b.draw());
-            explosions.forEach(e => e.draw());
-        }
+                if (gameState.won) {
+                    document.getElementById('gameOverTitle').textContent = '게임 클리어!';
+                }
 
-        function showGameOver() {
-            const gameOverScreen = document.getElementById('gameOverScreen');
-            document.getElementById('finalScore').textContent = gameState.score;
-            document.getElementById('finalStage').textContent = gameState.stage;
-
-            if (gameState.won) {
-                document.getElementById('gameOverTitle').textContent = '게임 클리어!';
+                gameOverScreen.classList.add('show');
             }
 
-            gameOverScreen.classList.add('show');
-        }
+            // 게임 루프
+            let animationId = null;
+            function gameLoop() {
+                update();
+                draw();
+                animationId = requestAnimationFrame(gameLoop);
+            }
 
-        // 게임 루프
-        let animationId = null;
-        function gameLoop() {
-            GAME_WIDTH = canvas.width;
-            GAME_HEIGHT = canvas.height;
-            update();
-            draw();
-            animationId = requestAnimationFrame(gameLoop);
-        }
+            // 게임 시작
+            function startGame() {
+                console.log('🎮 게임 시작됨');
+                gameLoop();
+            }
 
-        // 게임 시작
-        window.addEventListener('load', () => {
-            console.log('Game started');
-            gameLoop();
-        });
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', gameLoop);
-        } else {
-            gameLoop();
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', startGame);
+            } else {
+                startGame();
+            }
+        } catch (error) {
+            console.error('게임 에러:', error);
+            alert('게임 로드 실패: ' + error.message);
         }
     </script>
 </body>
