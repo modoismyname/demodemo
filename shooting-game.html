@@ -2,17 +2,29 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>슈팅게임 - 보스 전투</title>
     <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         body {
-            width: 100%;
+            width: 100vw;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -20,25 +32,30 @@
             background: #1a1a1a;
             font-family: Arial, sans-serif;
             overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
         }
 
         .game-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            max-width: 600px;
-            max-height: 900px;
-            aspect-ratio: 2/3;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100%;
+            max-height: 100%;
         }
 
         canvas {
             display: block;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background: linear-gradient(180deg, #87CEEB 0%, #1a1a2e 100%);
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
+            touch-action: none;
         }
 
         #gameOverScreen {
@@ -121,21 +138,23 @@
 
     <script>
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { antialias: false });
 
         // 캔버스 크기 설정
         function resizeCanvas() {
-            const container = canvas.parentElement;
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
+
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 100);
+        });
 
         // 게임 설정
-        const SCALE = Math.min(canvas.width / 300, canvas.height / 450);
-        const GAME_WIDTH = canvas.width;
-        const GAME_HEIGHT = canvas.height;
+        let GAME_WIDTH = canvas.width;
+        let GAME_HEIGHT = canvas.height;
 
         // 게임 상태
         let gameState = {
@@ -361,34 +380,36 @@
         });
 
         // 터치 입력 처리 (모바일)
-        let touchStartX = 0;
-        canvas.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-        });
+        let touchX = GAME_WIDTH / 2;
 
-        canvas.addEventListener('touchmove', (e) => {
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                touchX = (e.touches[0].clientX / window.innerWidth) * GAME_WIDTH;
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const touchX = e.touches[0].clientX - rect.left;
-            const centerX = GAME_WIDTH / 2;
+            if (e.touches.length > 0) {
+                touchX = (e.touches[0].clientX / window.innerWidth) * GAME_WIDTH;
+                const centerX = GAME_WIDTH / 2;
+                input.left = touchX < centerX - 50;
+                input.right = touchX > centerX + 50;
+            }
+        }, { passive: false });
 
-            input.left = touchX < centerX - 30;
-            input.right = touchX > centerX + 30;
-        });
-
-        canvas.addEventListener('touchend', () => {
+        document.addEventListener('touchend', (e) => {
             input.left = false;
             input.right = false;
-        });
+        }, { passive: false });
 
         // 마우스 입력 처리
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = (e.clientX - rect.left) * (GAME_WIDTH / rect.width);
+        document.addEventListener('mousemove', (e) => {
+            const mouseX = (e.clientX / window.innerWidth) * GAME_WIDTH;
             const centerX = GAME_WIDTH / 2;
 
-            input.left = mouseX < centerX - 30;
-            input.right = mouseX > centerX + 30;
+            input.left = mouseX < centerX - 50;
+            input.right = mouseX > centerX + 50;
         });
 
         // 게임 업데이트
@@ -533,14 +554,26 @@
         }
 
         // 게임 루프
+        let animationId = null;
         function gameLoop() {
+            GAME_WIDTH = canvas.width;
+            GAME_HEIGHT = canvas.height;
             update();
             draw();
-            requestAnimationFrame(gameLoop);
+            animationId = requestAnimationFrame(gameLoop);
         }
 
         // 게임 시작
-        gameLoop();
+        window.addEventListener('load', () => {
+            console.log('Game started');
+            gameLoop();
+        });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', gameLoop);
+        } else {
+            gameLoop();
+        }
     </script>
 </body>
 </html>
