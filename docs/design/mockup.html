@@ -67,6 +67,8 @@ th{font-size:13px;color:var(--muted);font-weight:500}
 .team .stats b{display:block;font-size:13px;color:var(--text)}
 .warn{color:var(--warn);font-size:12px;padding:0 12px 8px}
 .locked .team li{cursor:default}
+.team li.slot{background:transparent;border:1.5px dashed var(--border);color:var(--muted);justify-content:center;cursor:default;font-size:13px}
+.team li.slot.over{border-color:var(--tc);color:var(--tc)}
 .badge{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--primary);color:var(--on-primary);margin-left:8px}
 .pdf{background:#fff;color:#111;max-width:640px;margin:0 auto;padding:36px 40px;border:1px solid #ccc;box-shadow:0 4px 18px rgba(0,0,0,.12);aspect-ratio:1/1.414;font-size:13px}
 .pdf h2{font-size:20px;text-align:center;margin-bottom:4px}
@@ -108,6 +110,10 @@ th{font-size:13px;color:var(--muted);font-weight:500}
     <section class="screen on" id="match">
       <div class="row" style="margin-bottom:16px">
         <label>경기 날짜 <input type="date" id="date" class="btn" value="2026-10-11"></label>
+        <div class="seg" id="tcount">
+          <button class="on" data-k="2">2팀</button>
+          <button data-k="3">3팀</button>
+        </div>
         <div class="seg" id="mode">
           <button class="on" data-m="balanced">평준화</button>
           <button data-m="tiered">전문화</button>
@@ -131,7 +137,7 @@ th{font-size:13px;color:var(--muted);font-weight:500}
         <div>
           <div class="status" id="status"></div>
           <div id="result"></div>
-          <p class="callout">팀 구성 후 선수를 끌어서 다른 팀이나 교체대기로 옮길 수 있습니다. 다른 선수 위에 놓으면 두 선수를 맞바꿉니다. [팀 확정]을 누르면 편집이 잠기고 JSON 파일로 저장됩니다.</p>
+          <p class="callout">팀 구성 후 선수를 끌어서 다른 팀의 빈 슬롯이나 교체대기로 옮길 수 있습니다. 다른 선수 위에 놓으면 두 선수를 맞바꿉니다. 팀마다 빈 슬롯 2개가 있습니다. [팀 확정]을 누르면 편집이 잠기고 JSON 파일로 저장됩니다.</p>
         </div>
       </div>
     </section>
@@ -173,17 +179,16 @@ const STATS=[["stamina","활동량"],["speed","스피드"],["skill","개인기"]
 const names=["김민수","이준호","박지훈","최영진","정우성","강동원","조현우","윤성민","장재원","임도현","한승우","오세훈","서진우","신태양","권혁준","황보람","송민재","유재석"];
 let seed=7;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
 let players=names.map((n,i)=>({id:i,name:n,stats:Object.fromEntries(STATS.map(([k])=>[k,1+Math.floor(rnd()*3)])),att:i<14}));
-let mode="balanced",teams=null,bench=[],locked=false;
+let mode="balanced",teamCount=2,teams=null,caps=[],bench=[],locked=false;
+const SLOTS=2;
 const total=p=>STATS.reduce((a,[k])=>a+p.stats[k],0);
 const COLORS=["--teamA","--teamB","--teamC","--teamD"];
 
-function plan(n){
-  if(n<10) return null;
-  if(n===10) return {sizes:[5,5],bench:0};
-  if(n===11) return {sizes:[6,5],bench:0};
-  const sizes=Array(Math.floor(n/7)).fill(7);const r=n%7;
-  if(r>=5){sizes.push(r);return {sizes,bench:0}}
-  return {sizes,bench:r};
+// 선택한 팀 수(2 또는 3)로 고르게 나누고, 팀당 7명을 넘는 인원은 교체대기
+function plan(n,k=teamCount){
+  if(n<5*k) return null;
+  const onTeams=Math.min(n,7*k),base=Math.floor(onTeams/k),extra=onTeams%k;
+  return {sizes:[...Array(k).keys()].map(i=>base+(i<extra?1:0)),bench:n-onTeams};
 }
 function shuffle(a){return a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1])}
 
@@ -191,7 +196,7 @@ function build(){
   const att=players.filter(p=>p.att),pl=plan(att.length);if(!pl)return;
   let pool=shuffle(att);bench=pool.splice(0,pl.bench);
   pool.sort((a,b)=>total(b)-total(a));
-  const k=pl.sizes.length;teams=pl.sizes.map(()=>[]);
+  const k=pl.sizes.length;teams=pl.sizes.map(()=>[]);caps=pl.sizes.map(s=>s+SLOTS);
   if(mode==="tiered"){let i=0;pl.sizes.forEach((s,t)=>{teams[t]=pool.slice(i,i+s);i+=s});}
   else{
     let order=[];let fwd=true;
@@ -216,7 +221,7 @@ function teamCard(list,title,color,key,warn){
   return `<div class="team" style="--tc:var(${color})" data-key="${key}">
     <h3><b>${title}</b><span>${list.length}명 · 총점 ${tot}</span></h3>
     ${warn?`<div class="warn">⚠ 팀 인원은 5~7명이어야 합니다</div>`:""}
-    <ul>${list.map(p=>`<li draggable="${!locked}" data-id="${p.id}"><span>${p.name}</span><span class="sum">${total(p)}</span></li>`).join("")}</ul>
+    <ul>${list.map(p=>`<li draggable="${!locked}" data-id="${p.id}"><span>${p.name}</span><span class="sum">${total(p)}</span></li>`).join("")}${key==="bench"||locked?"":`<li class="slot" data-slot="1">빈 슬롯</li>`.repeat(Math.max(0,caps[key]-list.length))}</ul>
     ${key==="bench"?"":`<div class="stats">${STATS.map(([k,l])=>`<div><b>${sums[k]}</b>${l}</div>`).join("")}</div>`}
   </div>`;
 }
@@ -225,7 +230,7 @@ function render(){
   // attendance
   document.getElementById("att").innerHTML=players.map(p=>`<label><input type="checkbox" data-id="${p.id}" ${p.att?"checked":""} ${locked?"disabled":""}> ${p.name}<small>${total(p)}점</small></label>`).join("");
   const n=players.filter(p=>p.att).length,pl=plan(n),st=document.getElementById("status");
-  if(!pl){st.className="status bad";st.textContent=`참석 ${n}명 · 경기 불가 (최소 10명 필요)`}
+  if(!pl){st.className="status bad";st.textContent=`참석 ${n}명 · ${teamCount}팀 경기 불가 (최소 ${teamCount*5}명 필요)`}
   else{st.className="status";st.textContent=`참석 ${n}명 → `+pl.sizes.map((s,i)=>`${"ABCD"[i]}팀 ${s}명`).join(" + ")+(pl.bench?` + 교체대기 ${pl.bench}명`:"")}
   document.getElementById("build").disabled=!pl||locked;
   document.getElementById("build").textContent=teams&&!locked?"다시 구성":"팀 구성";
@@ -264,8 +269,9 @@ function bindDrag(){
       const to=card.dataset.key;const src=listOf(from),dst=listOf(to);
       const si=src.findIndex(p=>p.id===dragId);
       const targetLi=e.target.closest("li");
-      if(targetLi&&+targetLi.dataset.id!==dragId){const di=dst.findIndex(p=>p.id===+targetLi.dataset.id);[src[si],dst[di]]=[dst[di],src[si]]}
-      else if(String(from)!==String(to)){dst.push(src.splice(si,1)[0])}
+      if(targetLi&&targetLi.dataset.slot){if(String(from)!==String(to))dst.push(src.splice(si,1)[0])}
+      else if(targetLi&&+targetLi.dataset.id!==dragId){const di=dst.findIndex(p=>p.id===+targetLi.dataset.id);[src[si],dst[di]]=[dst[di],src[si]]}
+      else if(String(from)!==String(to)){if(to!=="bench"&&dst.length>=caps[+to]){alert("빈 슬롯이 없습니다. 선수 위에 놓아 맞바꾸세요.");return}dst.push(src.splice(si,1)[0])}
       render();
     };
   });
@@ -277,6 +283,8 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
 });
 document.getElementById("mode").onclick=e=>{const m=e.target.dataset.m;if(!m||locked)return;mode=m;
   document.querySelectorAll("#mode button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));if(teams)build()};
+document.getElementById("tcount").onclick=e=>{const k=+e.target.dataset.k;if(!k||locked)return;teamCount=k;
+  document.querySelectorAll("#tcount button").forEach(b=>b.classList.toggle("on",+b.dataset.k===k));teams=null;bench=[];render()};
 document.getElementById("att").onchange=e=>{const p=players.find(x=>x.id===+e.target.dataset.id);p.att=e.target.checked;teams=null;bench=[];render()};
 document.getElementById("all").onclick=()=>{if(locked)return;const on=!players.every(p=>p.att);players.forEach(p=>p.att=on);teams=null;render()};
 document.getElementById("build").onclick=build;
