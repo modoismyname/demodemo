@@ -129,13 +129,21 @@ flutter build web --release --no-web-resources-cdn   # 결과: app/build/web (�
 6. **이모지는 쓰지 마세요.** 한글 폰트에 이모지가 없어서, 오프라인이면 글자가 깨집니다. 아이콘은 Material Icons를 쓰세요.
 7. 한글 폰트 파일은 Google Fonts의 정적 TTF입니다(각 약 6MB). pdf 패키지는 OTF(CFF)와 가변 폰트를 지원하지 않으니 교체할 때 주의하세요.
 
+## 6-1. 아이폰 대응 (완료)
+- 파일 저장(JSON, PDF, PNG)은 `web_io.saveFile`/`shareFile`을 사용합니다. 아이폰이면 `navigator.share` 공유 시트를 엽니다. Safari는 **버튼을 누른 직후 await 없이** 호출해야 허용하므로, PDF는 만든 뒤 "준비됨" 창에서 한 번 더 누르게 합니다.
+- 아이폰 판별은 UA의 iPhone/iPad/iPod, 또는 `Macintosh`이면서 터치 지점이 2개 이상(iPadOS)인 경우입니다.
+- 파일 선택은 아이폰에서 `accept` 필터를 두지 않습니다(JSON이 회색으로 막히는 문제).
+- 휴대폰에서는 `LongPressDraggable`을 쓰고, 끌면서 화면 위/아래 끝 80px 안에 들어가면 자동 스크롤합니다(`_DragAutoScroller`). 좁은 화면에서는 참석 명단 카드를 접을 수 있습니다.
+- `web/index.html`에서 길게 누를 때 뜨는 메뉴와 텍스트 선택을 막고, 홈 화면 앱용 메타 태그와 축구공 아이콘을 넣었습니다.
+- 자동 테스트 팁: Chromium에서 아이폰처럼 동작하게 하려면 UA뿐 아니라 `navigator.platform`도 `'iPhone'`으로 바꿔야 Flutter가 iOS로 인식합니다(`addInitScript`). 이 모드에서는 semantics 트리가 켜지지 않으므로 좌표와 스크린샷으로 확인합니다. 터치는 CDP `Input.dispatchTouchEvent`를 씁니다.
+- 배포: `.github/workflows/deploy-pages.yml`이 `main`에 push될 때 GitHub Pages로 배포합니다(`--base-href /demodemo/`). Pages Source를 "GitHub Actions"로 바꾸는 설정이 필요합니다.
+
 ## 7. 남은 일과 결정 대기 사항
 
 - [ ] `docs/TEST_SCENARIOS.md` 사용자 컨펌 (👀 항목은 사용자가 직접 확인)
 - [ ] 호스팅 선택: GitHub Pages(무료이지만 비공개 저장소는 유료 플랜 필요), Netlify 또는 Cloudflare Pages(무료, 비공개 저장소 가능), Firebase Hosting
 - [ ] 별도 버전 관리 방식: 새 브랜치 또는 `app_pc/` 같은 새 폴더
 - [ ] PC 최적화 범위: 단축키, 넓은 화면 레이아웃 등
-- [ ] (선택) 알려진 제한 개선: 휴대폰에서 드래그할 때 자동 스크롤
 - [ ] (v2) AI 검토 기능. 도입하면 API 키를 숨길 서버리스 프록시가 필요합니다.
 
 ## 8. 새 세션 시작용 프롬프트 (복사해서 사용)

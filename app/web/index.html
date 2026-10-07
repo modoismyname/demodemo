@@ -22,15 +22,30 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="theme-color" content="#1F7A4D">
+  <meta name="format-detection" content="telephone=no">
   <meta name="apple-mobile-web-app-title" content="팀 밸런서">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>풋살 팀 밸런서</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* 아이폰에서 선수를 길게 눌러 끌 때 확대경, 텍스트 선택, 미리보기 메뉴가 뜨지 않게 한다. */
+    html, body {
+      margin: 0;
+      background: #F7FAF7;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+  </style>
 </head>
 <body>
   <!--
