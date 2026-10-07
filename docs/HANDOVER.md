@@ -138,6 +138,11 @@ flutter build web --release --no-web-resources-cdn   # 결과: app/build/web (�
 - 자동 테스트 팁: Chromium에서 아이폰처럼 동작하게 하려면 UA뿐 아니라 `navigator.platform`도 `'iPhone'`으로 바꿔야 Flutter가 iOS로 인식합니다(`addInitScript`). 이 모드에서는 semantics 트리가 켜지지 않으므로 좌표와 스크린샷으로 확인합니다. 터치는 CDP `Input.dispatchTouchEvent`를 씁니다.
 - 배포: `.github/workflows/deploy-pages.yml`이 `main`에 push될 때 GitHub Pages로 배포합니다(`--base-href /demodemo/`). Pages Source를 "GitHub Actions"로 바꾸는 설정이 필요합니다.
 
+## 6-2. 명단 백업/복원 (완료)
+- `models/roster.dart`의 `RosterBackup`이 백업 파일 형식입니다(`type: futsal-roster`, `schemaVersion: 1`, `players`).
+- `AppState.exportRoster()`는 마지막 백업 시각(`rosterBackupAt.v1`)을 저장하고, `importRoster(replace:)`로 합치기(ID 우선, 없으면 이름으로 같은 선수 판단)와 바꾸기를 합니다.
+- 경기 편성 JSON과 명단 백업 JSON은 서로 다른 화면에서 불러오고, 잘못 넣으면 안내합니다.
+
 ## 7. 남은 일과 결정 대기 사항
 
 - [ ] `docs/TEST_SCENARIOS.md` 사용자 컨펌 (👀 항목은 사용자가 직접 확인)

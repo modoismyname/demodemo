@@ -85,6 +85,10 @@ class Lineup {
       };
 
   factory Lineup.fromJson(Map<String, dynamic> json) {
+    if (json['type'] == 'futsal-roster') {
+      throw const FormatException(
+          '선수 명단 백업 파일입니다. [선수 관리]의 [명단 복원]으로 불러오세요.');
+    }
     final version = json['schemaVersion'];
     if (version is! int || version > schemaVersion) {
       throw const FormatException('지원하지 않는 파일 형식입니다.');
