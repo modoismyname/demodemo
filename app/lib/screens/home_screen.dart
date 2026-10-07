@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'match_screen.dart';
 import 'pdf_preview_screen.dart';
 import 'players_screen.dart';
+import '../widgets/credit_footer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,14 +37,20 @@ class _HomeScreenState extends State<HomeScreen> {
           child: TextButton(
             onPressed: () => _goTo(i),
             style: TextButton.styleFrom(
-              foregroundColor: Colors.white.withValues(alpha: i == _tab ? 1 : .75),
-              backgroundColor:
-                  i == _tab ? Colors.white.withValues(alpha: .18) : null,
+              foregroundColor: Colors.white.withValues(
+                alpha: i == _tab ? 1 : .75,
+              ),
+              backgroundColor: i == _tab
+                  ? Colors.white.withValues(alpha: .18)
+                  : null,
               shape: const StadiumBorder(),
             ),
-            child: Text(_tabs[i],
-                style: TextStyle(
-                    fontWeight: i == _tab ? FontWeight.w700 : FontWeight.w400)),
+            child: Text(
+              _tabs[i],
+              style: TextStyle(
+                fontWeight: i == _tab ? FontWeight.w700 : FontWeight.w400,
+              ),
+            ),
           ),
         ),
     ];
@@ -58,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     return Scaffold(
+      bottomNavigationBar: const CreditFooter(),
       appBar: AppBar(
         title: title,
         actions: wide ? [...tabButtons, const SizedBox(width: 12)] : null,

@@ -10,6 +10,7 @@ import '../models/roster.dart';
 import '../services/web_io.dart';
 import '../state/app_state.dart';
 import '../util/format.dart';
+import 'backup_manual_screen.dart';
 
 class PlayersScreen extends StatefulWidget {
   const PlayersScreen({super.key});
@@ -250,6 +251,13 @@ class _PlayersScreenState extends State<PlayersScreen> {
             onPressed: _restore,
             icon: const Icon(Icons.restore, size: 18),
             label: const Text('명단 복원'),
+          ),
+          TextButton.icon(
+            key: const Key('backupManual'),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => const BackupManualScreen())),
+            icon: const Icon(Icons.help_outline, size: 18),
+            label: const Text('사용법'),
           ),
           Text(
             last == null ? '아직 백업하지 않았습니다' : '마지막 백업: ${formatKoreanDate(last)}',
