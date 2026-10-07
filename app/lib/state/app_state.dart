@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/lineup.dart';
 import '../models/player.dart';
+import '../models/roster.dart';
 import '../services/storage.dart';
 import '../services/team_builder.dart';
 
@@ -21,10 +22,18 @@ class DropTarget {
 
 enum MoveResult { moved, swapped, noSlot, ignored }
 
+class RosterImportResult {
+  const RosterImportResult({this.added = 0, this.updated = 0, this.removed = 0});
+  final int added;
+  final int updated;
+  final int removed;
+}
+
 class AppState extends ChangeNotifier {
   AppState(this._storage, {Random? random, DateTime? today})
       : _random = random ?? Random(),
-        players = _storage.loadPlayers() {
+        players = _storage.loadPlayers(),
+        lastBackupAt = _storage.loadLastBackup() {
     final now = today ?? DateTime.now();
     _openDate(DateTime(now.year, now.month, now.day));
   }
@@ -35,6 +44,9 @@ class AppState extends ChangeNotifier {
 
   final List<Player> players;
   late Lineup lineup;
+
+  /// 마지막으로 명단을 백업한 시각. 한 번도 안 했으면 null.
+  DateTime? lastBackupAt;
 
   // ---------------- 선수 관리 ----------------
 
@@ -67,6 +79,67 @@ class AppState extends ChangeNotifier {
       _saveLineup();
     }
     _savePlayers();
+  }
+
+  // ---------------- 명단 백업/복원 ----------------
+
+  /// 전체 명단을 백업 파일 내용으로 만든다. 마지막 백업 시각도 기록한다.
+  RosterBackup exportRoster({DateTime? now}) {
+    final at = now ?? DateTime.now();
+    lastBackupAt = at;
+    _storage.saveLastBackup(at);
+    notifyListeners();
+    return RosterBackup(players.map((p) => p.copy()).toList(), exportedAt: at);
+  }
+
+  /// 백업 파일의 명단을 불러온다.
+  /// [replace]가 false면 합치기: 같은 선수(같은 ID, 없으면 같은 이름)는 파일 내용으로 갱신하고 새 선수는 추가.
+  /// [replace]가 true면 현재 명단을 파일 명단으로 바꾼다.
+  RosterImportResult importRoster(RosterBackup backup, {required bool replace}) {
+    // 파일 안에서 이름이 겹치면 앞의 선수만 사용
+    final seenNames = <String>{};
+    final incoming = [
+      for (final p in backup.players)
+        if (p.name.trim().isNotEmpty && seenNames.add(p.name.trim()))
+          (p.copy()..name = p.name.trim()),
+    ];
+
+    var added = 0, updated = 0, removed = 0;
+    if (replace) {
+      final incomingIds = {for (final p in incoming) p.id};
+      final existingIds = {for (final p in players) p.id};
+      removed = existingIds.difference(incomingIds).length;
+      updated = incomingIds.intersection(existingIds).length;
+      added = incoming.length - updated;
+      players
+        ..clear()
+        ..addAll(incoming);
+    } else {
+      for (final p in incoming) {
+        final i = players.indexWhere((e) => e.id == p.id);
+        final j = i >= 0 ? i : players.indexWhere((e) => e.name == p.name);
+        if (j >= 0) {
+          final cur = players[j];
+          // 이름을 바꿨을 때 다른 선수와 겹치면 기존 이름 유지
+          if (!_nameTaken(p.name, except: cur)) cur.name = p.name;
+          cur.stats.addAll(p.stats);
+          updated++;
+        } else {
+          players.add(p);
+          added++;
+        }
+      }
+    }
+
+    final ids = {for (final p in players) p.id};
+    if (!lineup.confirmed) {
+      final before = lineup.attendees.length;
+      lineup.attendees.retainAll(ids);
+      if (lineup.attendees.length != before) _clearTeams();
+      _storage.saveLineup(lineup);
+    }
+    _savePlayers();
+    return RosterImportResult(added: added, updated: updated, removed: removed);
   }
 
   bool _nameTaken(String n, {Player? except}) =>

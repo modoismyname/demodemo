@@ -282,6 +282,15 @@ class _Toolbar extends StatelessWidget {
         '${formatKoreanDate(lineup.date)} 편성을 불러왔습니다.'
         '${added > 0 ? ' 명단에 없던 선수 $added명을 추가했습니다.' : ''}',
       );
+    } on FormatException catch (e) {
+      if (context.mounted) {
+        _snack(
+          context,
+          e.message.startsWith('선수 명단')
+              ? e.message
+              : '파일을 읽을 수 없습니다. 이 앱에서 저장한 JSON 파일인지 확인해 주세요.',
+        );
+      }
     } catch (_) {
       if (context.mounted) {
         _snack(context, '파일을 읽을 수 없습니다. 이 앱에서 저장한 JSON 파일인지 확인해 주세요.');

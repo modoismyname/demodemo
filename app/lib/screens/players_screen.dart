@@ -1,8 +1,15 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/lineup.dart';
 import '../models/player.dart';
+import '../models/roster.dart';
+import '../services/web_io.dart';
 import '../state/app_state.dart';
+import '../util/format.dart';
 
 class PlayersScreen extends StatefulWidget {
   const PlayersScreen({super.key});
@@ -34,6 +41,75 @@ class _PlayersScreenState extends State<PlayersScreen> {
   void _snack(String msg) => ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(msg)));
+
+  /// 전체 명단을 JSON 파일로 저장한다. 아이폰은 공유 시트에서 "파일에 저장"을 고른다.
+  void _backup() {
+    final state = context.read<AppState>();
+    if (state.players.isEmpty) {
+      _snack('백업할 선수가 없습니다.');
+      return;
+    }
+    final backup = state.exportRoster();
+    final json = const JsonEncoder.withIndent('  ').convert(backup.toJson());
+    final name = 'futsal_roster_${formatDateKey(backup.exportedAt!)}.json';
+    // await 전에 바로 호출해야 아이폰 Safari가 공유 시트를 허용한다.
+    saveFile(Uint8List.fromList(utf8.encode(json)), name, 'application/json');
+    _snack('선수 ${backup.players.length}명을 $name 파일로 백업합니다.');
+  }
+
+  Future<void> _restore() async {
+    final state = context.read<AppState>();
+    final RosterBackup backup;
+    try {
+      final text = await pickTextFile();
+      if (text == null) return;
+      backup = RosterBackup.fromJson(
+          (jsonDecode(text) as Map).cast<String, dynamic>());
+    } catch (_) {
+      if (mounted) {
+        _snack('명단 백업 파일을 읽을 수 없습니다. [명단 백업]으로 저장한 파일인지 확인해 주세요.');
+      }
+      return;
+    }
+    if (!mounted) return;
+    if (backup.players.isEmpty) {
+      _snack('파일에 선수가 없습니다.');
+      return;
+    }
+    final replace = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('명단 복원'),
+        content: Text(
+          '파일의 선수 ${backup.players.length}명을 불러옵니다'
+          '${backup.exportedAt != null ? ' (${formatKoreanDate(backup.exportedAt!)} 백업)' : ''}.\n\n'
+          '• 합치기: 지금 명단은 그대로 두고, 같은 선수는 파일의 능력치로 바꾸고 새 선수는 추가합니다.\n'
+          '• 바꾸기: 지금 명단을 지우고 파일의 명단으로 바꿉니다.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('취소')),
+          OutlinedButton(
+            key: const Key('restoreReplace'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('바꾸기'),
+          ),
+          FilledButton(
+            key: const Key('restoreMerge'),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('합치기'),
+          ),
+        ],
+      ),
+    );
+    if (replace == null || !mounted) return;
+    final r = state.importRoster(backup, replace: replace);
+    _snack([
+      '명단을 복원했습니다.',
+      if (r.added > 0) '추가 ${r.added}명',
+      if (r.updated > 0) '갱신 ${r.updated}명',
+      if (r.removed > 0) '삭제 ${r.removed}명',
+    ].join(' '));
+  }
 
   Future<void> _rename(Player p) async {
     final ctrl = TextEditingController(text: p.name);
@@ -127,6 +203,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
               ]),
             ],
           ),
+          const SizedBox(height: 10),
+          _backupBar(context, state),
           const SizedBox(height: 12),
           if (players.isEmpty)
             Padding(
@@ -145,6 +223,42 @@ class _PlayersScreenState extends State<PlayersScreen> {
         ],
       );
     });
+  }
+
+  Widget _backupBar(BuildContext context, AppState state) {
+    final scheme = Theme.of(context).colorScheme;
+    final last = state.lastBackupAt;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          OutlinedButton.icon(
+            key: const Key('backupRoster'),
+            onPressed: _backup,
+            icon: const Icon(Icons.save_alt, size: 18),
+            label: const Text('명단 백업'),
+          ),
+          OutlinedButton.icon(
+            key: const Key('restoreRoster'),
+            onPressed: _restore,
+            icon: const Icon(Icons.restore, size: 18),
+            label: const Text('명단 복원'),
+          ),
+          Text(
+            last == null ? '아직 백업하지 않았습니다' : '마지막 백업: ${formatKoreanDate(last)}',
+            key: const Key('lastBackup'),
+            style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _header(BuildContext context) {

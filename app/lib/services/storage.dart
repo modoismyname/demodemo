@@ -11,6 +11,7 @@ class Storage {
 
   static const _playersKey = 'players.v1';
   static const _lineupPrefix = 'lineup.v1.';
+  static const _lastBackupKey = 'rosterBackupAt.v1';
 
   final SharedPreferences _prefs;
 
@@ -32,6 +33,12 @@ class Storage {
 
   Future<void> savePlayers(List<Player> players) => _prefs.setString(
       _playersKey, jsonEncode(players.map((p) => p.toJson()).toList()));
+
+  DateTime? loadLastBackup() =>
+      DateTime.tryParse(_prefs.getString(_lastBackupKey) ?? '');
+
+  Future<void> saveLastBackup(DateTime at) =>
+      _prefs.setString(_lastBackupKey, at.toIso8601String());
 
   Lineup? loadLineup(DateTime date) {
     final raw = _prefs.getString(_lineupPrefix + formatDateKey(date));
