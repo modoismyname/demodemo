@@ -52,6 +52,7 @@ article { background: var(--surface); border: 1px solid var(--border); border-ra
 .cover h1 { font-size: 34px; margin: 10px 0 4px; }
 .cover .sub { font-size: 18px; color: var(--muted); margin: 0; }
 .cover .ver { margin-top: 18px; color: var(--muted); font-size: 14px; }
+.cover .maker { margin: 4px 0 0; font-size: 16px; font-weight: 700; }
 .cover-img { margin-top: 28px; }
 
 h2 {
@@ -147,7 +148,7 @@ kbd {
 <body>
 
 <div class="bar">
-  <strong>풋살 팀 밸런서 사용자 설명서</strong>
+  <strong>풋살 팀 밸런서 사용자 설명서 <small style="font-weight:400;opacity:.85;margin-left:6px">제작자 : 박재욱 (FcSEBRO)</small></strong>
   <a href="manual/futsal_user_manual.pdf" target="_blank" rel="noopener">PDF로 보기 / 인쇄</a>
   <a href="index.html">앱으로 돌아가기</a>
 </div>
@@ -172,7 +173,7 @@ kbd {
       <li><a href="#s14">키보드 단축키</a></li>
       <li><a href="#s15">데이터 보관과 백업</a></li>
       <li><a href="#s16">자주 묻는 질문</a></li>
-      <li><a href="#s17">부록</a></li>
+      <li><a href="#s17">부록 (제작자, 버전)</a></li>
     </ol>
   </nav>
 
@@ -184,6 +185,7 @@ kbd {
   <h1>풋살 팀 밸런서</h1>
   <p class="sub">사용자 설명서 · 로컬 PC 버전</p>
   <p class="ver">버전 1.0 · 2026년 10월</p>
+  <p class="maker">제작자 : 박재욱 (FcSEBRO)</p>
   <figure class="cover-img"><img src="manual/img/08-teams-2.png" alt="팀 구성 화면"></figure>
 </section>
 
@@ -207,7 +209,7 @@ kbd {
     <li>키보드 단축키</li>
     <li>데이터 보관과 백업</li>
     <li>자주 묻는 질문과 문제 해결</li>
-    <li>부록 — 파일 목록, 편성 규칙 요약</li>
+    <li>부록 — 파일 목록, 편성 규칙 요약, 제작자와 버전 정보</li>
   </ol>
 </section>
 
@@ -258,7 +260,7 @@ kbd {
 <table>
   <tr><th class="c" style="width:8%">번호</th><th style="width:22%">이름</th><th>설명</th></tr>
   <tr><td class="c"><span class="num">1</span></td><td>탭</td><td><b>경기 편성</b>(팀 나누기), <b>선수 관리</b>(명단과 능력치), <b>PDF 미리보기</b>(출력물 확인) 화면을 오갑니다.</td></tr>
-  <tr><td class="c"><span class="num">2</span></td><td>사용설명서 / 단축키</td><td><span class="btnlike">사용설명서</span>를 누르면 이 설명서가 새 탭으로 열립니다(<kbd>F1</kbd>). <span class="btnlike">단축키</span>는 키보드 단축키 목록을 보여 줍니다. 화면 맨 아래에도 설명서와 설명서 PDF 링크가 있습니다.</td></tr>
+  <tr><td class="c"><span class="num">2</span></td><td>사용설명서 / 단축키</td><td><span class="btnlike">사용설명서</span>를 누르면 이 설명서가 새 탭으로 열립니다(<kbd>F1</kbd>). <span class="btnlike">단축키</span>는 키보드 단축키 목록을 보여 줍니다. 화면 맨 아래에는 제작자 정보와 함께 설명서, 설명서 PDF 링크가 있습니다.</td></tr>
   <tr><td class="c"><span class="num">3</span></td><td>경기일</td><td>경기 날짜를 고릅니다. 날짜마다 참석 체크와 편성이 따로 보관됩니다.</td></tr>
   <tr><td class="c"><span class="num">4</span></td><td>팀 수</td><td>2팀 또는 3팀을 고릅니다.</td></tr>
   <tr><td class="c"><span class="num">5</span></td><td>편성 방식</td><td>평준화(실력을 고르게) 또는 전문화(실력 순서대로)를 고릅니다.</td></tr>
@@ -689,13 +691,16 @@ PDF 뷰어의 인쇄 설정에서 용지는 <b>A4</b>, 크기는 <b>실제 크�
   <tr><td>확정 조건</td><td>모든 팀이 5~7명</td></tr>
 </table>
 
-<h3>17-4. 버전 정보</h3>
+<h3>17-4. 제작자와 버전 정보</h3>
+<table>
+  <tr><th style="width:30%">제작자</th><td>박재욱 (FcSEBRO)</td></tr>
+</table>
 <table>
   <tr><th style="width:30%">버전</th><th>날짜</th><th>내용</th></tr>
   <tr><td>1.0 (최종본)</td><td>2026-10-07</td><td>로컬 PC 버전 첫 배포. HTML/JS로 제작, 서버·DB 없이 실행</td></tr>
 </table>
 
-<p class="foot">풋살 팀 밸런서 사용자 설명서 · 버전 1.0</p>
+<p class="foot">풋살 팀 밸런서 사용자 설명서 · 버전 1.0 · 제작자 : 박재욱 (FcSEBRO)</p>
 </article>
 </div>
 </body>

@@ -75,6 +75,7 @@ h2 { font-size: 16px; margin: 0; }
 .manual-link svg { width: 16px; height: 16px; }
 .app-footer { padding: 14px 24px 22px; font-size: 12px; color: var(--muted); text-align: center; }
 .app-footer a { color: var(--primary); }
+.app-footer .maker { display: inline-block; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
 
 .notice { background: var(--warn); color: #fff; padding: 8px 24px; font-size: 13px; }
 
