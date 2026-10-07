@@ -85,6 +85,11 @@ th{font-size:13px;color:var(--muted);font-weight:500}
   .pl-table td.nm{font-weight:700;font-size:16px}
   .pdf{padding:20px}
 }
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal.on{display:flex}
+.modal .box{background:var(--surface);border-radius:16px;padding:18px;max-width:440px;width:100%;max-height:92vh;overflow:auto}
+.modal img{width:100%;border-radius:10px;border:1px solid var(--border);display:block;margin:10px 0}
+.toast{font-size:13px;color:var(--primary);min-height:18px}
 </style>
 </head>
 <body>
@@ -112,6 +117,7 @@ th{font-size:13px;color:var(--muted);font-weight:500}
           <button class="btn primary" id="build">팀 구성</button>
           <button class="btn" id="confirm" disabled>팀 확정</button>
           <button class="btn" id="print" disabled>출력</button>
+          <button class="btn" id="share" disabled>공유</button>
         </div>
       </div>
       <div class="grid2">
@@ -156,6 +162,12 @@ th{font-size:13px;color:var(--muted);font-weight:500}
   </main>
 </div>
 
+<div class="modal" id="shareModal"><div class="box">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0">팀 명단 공유</h2><button class="btn" id="closeShare" style="padding:4px 10px">닫기</button></div>
+  <img id="shareImg" alt="팀 명단 이미지">
+  <div class="row"><button class="btn primary" id="copyImg">이미지 복사</button><button class="btn" id="saveImg">이미지 저장</button></div>
+  <div class="toast" id="toast"></div>
+</div></div>
 <script>
 const STATS=[["stamina","활동량"],["speed","스피드"],["skill","개인기"],["teamwork","협동력"],["condition","컨디션"]];
 const names=["김민수","이준호","박지훈","최영진","정우성","강동원","조현우","윤성민","장재원","임도현","한승우","오세훈","서진우","신태양","권혁준","황보람","송민재","유재석"];
@@ -220,6 +232,7 @@ function render(){
   document.getElementById("confirm").disabled=!teams||locked;
   document.getElementById("confirm").textContent=locked?"확정됨":"팀 확정";
   document.getElementById("print").disabled=!locked;
+  document.getElementById("share").disabled=!locked;
   const res=document.getElementById("result");
   if(teams){
     res.innerHTML=`<div class="teams ${locked?"locked":""}">`+teams.map((t,i)=>teamCard(t,"ABCD"[i]+"팀",COLORS[i],i,t.length<5||t.length>7)).join("")+
@@ -280,6 +293,43 @@ document.getElementById("ptable").onclick=e=>{
 };
 document.getElementById("add").onclick=()=>{const n=document.getElementById("newname").value.trim();if(!n)return;
   players.push({id:Date.now(),name:n,stats:Object.fromEntries(STATS.map(([k])=>[k,2])),att:false});document.getElementById("newname").value="";render()};
+const TEAM_HEX=["#2563eb","#dc2626","#d97706","#7c3aed"];
+let shareBlob=null;
+function makeShareImage(){
+  const groups=teams.map((t,i)=>({title:"ABCD"[i]+"팀",color:TEAM_HEX[i],names:t.map(p=>p.name)}));
+  if(bench.length)groups.push({title:"교체대기",color:"#6b7280",names:bench.map(p=>p.name)});
+  const cols=Math.min(groups.length,2),rows=Math.ceil(groups.length/cols);
+  const maxN=Math.max(...groups.map(g=>g.names.length));
+  const W=720,pad=32,cw=(W-pad*2-20*(cols-1))/cols,ch=64+maxN*40+16,H=130+rows*(ch+20)+30;
+  const c=document.createElement("canvas");c.width=W*2;c.height=H*2;const x=c.getContext("2d");x.scale(2,2);
+  const F='"Noto Sans KR",sans-serif';
+  x.fillStyle="#f4f6f4";x.fillRect(0,0,W,H);
+  x.fillStyle="#1f7a4d";x.fillRect(0,0,W,96);
+  x.fillStyle="#fff";x.font=`700 28px ${F}`;x.fillText("⚽ 풋살 팀 편성",pad,52);
+  const d=new Date(document.getElementById("date").value+"T00:00");
+  x.font=`400 17px ${F}`;x.fillText(`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${"일월화수목금토"[d.getDay()]})`,pad,80);
+  groups.forEach((g,i)=>{
+    const gx=pad+(i%cols)*(cw+20),gy=120+Math.floor(i/cols)*(ch+20);
+    x.fillStyle="#fff";x.beginPath();x.roundRect(gx,gy,cw,ch,14);x.fill();
+    x.fillStyle=g.color;x.beginPath();x.roundRect(gx,gy,cw,52,[14,14,0,0]);x.fill();
+    x.fillStyle="#fff";x.font=`700 22px ${F}`;x.fillText(g.title,gx+18,gy+34);
+    x.font=`400 16px ${F}`;x.textAlign="right";x.fillText(`${g.names.length}명`,gx+cw-18,gy+33);x.textAlign="left";
+    x.fillStyle="#1b1f1c";x.font=`500 19px ${F}`;
+    g.names.forEach((n,j)=>x.fillText(`${j+1}. ${n}`,gx+22,gy+90+j*40));
+  });
+  return new Promise(r=>c.toBlob(b=>{shareBlob=b;document.getElementById("shareImg").src=URL.createObjectURL(b);r()},"image/png"));
+}
+const toast=t=>{document.getElementById("toast").textContent=t};
+document.getElementById("share").onclick=async()=>{await document.fonts.ready;await makeShareImage();toast("");document.getElementById("shareModal").classList.add("on")};
+document.getElementById("closeShare").onclick=()=>document.getElementById("shareModal").classList.remove("on");
+document.getElementById("copyImg").onclick=async()=>{
+  try{await navigator.clipboard.write([new ClipboardItem({"image/png":shareBlob})]);toast("복사했습니다. 카톡 대화창에 붙여 넣으세요.")}
+  catch(e){
+    const f=new File([shareBlob],"teams.png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]});return}catch(_){}}
+    toast("이 브라우저는 이미지 복사를 지원하지 않습니다. [이미지 저장]을 이용하세요.")}
+};
+document.getElementById("saveImg").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(shareBlob);a.download=`futsal_teams_${document.getElementById("date").value}.png`;a.click()};
 render();
 </script>
 </body>
