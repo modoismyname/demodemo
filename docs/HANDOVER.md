@@ -1,7 +1,7 @@
 # 인수인계서 — 풋살 팀 밸런서 → PC 웹 서비스 버전
 
 > 작성일: 2026-10-07
-> 원본 작업 브랜치: `claude/zealous-hypatia-137buj` (저장소 `simpleman202301-arch/demodemo`)
+> 원본 작업 브랜치: `claude/zealous-hypatia-137buj` (저장소 `modoismyname/demodemo`)
 > ⚠️ 모든 결과물은 위 브랜치에만 있고 `main`에는 아직 없습니다. 새 작업은 **이 브랜치를 기준으로** 시작해야 합니다.
 
 ---
@@ -112,6 +112,7 @@ flutter build web --release --no-web-resources-cdn   # 결과: app/build/web (�
 ```
 
 - 개발 당시 Flutter 3.47.6 / Dart 3.13.5를 사용했습니다.
+- 배포 워크플로는 빌드 뒤 `python3 tool/stamp_version.py <버전>`으로 스크립트 주소에 `?v=` 버전 표시를 붙여 브라우저 캐시 문제를 막습니다. Flutter를 올렸을 때 이 스크립트가 "찾지 못했습니다"로 실패하면 `flutter_bootstrap.js`의 `mainJsPath` 형식을 확인하세요.
 - **`--no-web-resources-cdn` 옵션은 꼭 유지**하세요. 이 옵션이 없으면 CanvasKit을 `www.gstatic.com`에서 받는데, 클라우드 환경에서는 이 주소가 차단되어 앱이 뜨지 않습니다. 이 옵션을 쓰면 오프라인에서도 동작합니다.
 - 배포할 때 `base href` 확인이 필요합니다. GitHub Pages처럼 하위 경로에 배포하면 `flutter build web --base-href /<repo>/`를 써야 합니다.
 
@@ -154,7 +155,7 @@ flutter build web --release --no-web-resources-cdn   # 결과: app/build/web (�
 ## 8. 새 세션 시작용 프롬프트 (복사해서 사용)
 
 ```
-simpleman202301-arch/demodemo 저장소의 claude/zealous-hypatia-137buj 브랜치에 있는
+modoismyname/demodemo 저장소의 claude/zealous-hypatia-137buj 브랜치에 있는
 풋살 팀 밸런서(Flutter Web)를 PC에서 웹페이지로 서비스하는 별도 버전으로 만들려고 해.
 먼저 docs/HANDOVER.md, docs/DEVELOPMENT_PLAN.md, docs/TEST_SCENARIOS.md를 읽고,
 이 버전의 개발계획서를 작성해서 나와 하나씩 컨펌하며 진행해 줘.

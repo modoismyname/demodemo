@@ -33,6 +33,8 @@ jobs:
       - run: flutter test
       # 저장소 이름이 경로가 된다: https://<owner>.github.io/<repo>/
       - run: flutter build web --release --no-web-resources-cdn --base-href "/${{ github.event.repository.name }}/"
+      # 배포마다 스크립트 주소에 버전 표시를 붙여 브라우저가 이전 파일을 쓰지 않게 한다.
+      - run: python3 tool/stamp_version.py "${{ github.run_number }}-${GITHUB_SHA::7}"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: app/build/web
