@@ -6,7 +6,8 @@
 - 화면 시안: [docs/design/mockup.html](docs/design/mockup.html)
 - 테스트 시나리오: [docs/TEST_SCENARIOS.md](docs/TEST_SCENARIOS.md)
 - 인수인계서 (PC 웹 서비스 버전): [docs/HANDOVER.md](docs/HANDOVER.md)
-- 앱 소스: [app/](app/)
+- 앱 소스 (Flutter Web): [app/](app/)
+- **로컬 PC 웹 버전 (HTML/JS, 서버 불필요)**: [web_local/](web_local/) — `web_local/index.html`을 더블클릭하면 바로 실행됩니다. 테스트 시나리오: [docs/LOCAL_WEB_TEST_SCENARIOS.md](docs/LOCAL_WEB_TEST_SCENARIOS.md)
 
 ## 실행 방법
 
