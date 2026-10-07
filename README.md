@@ -5,6 +5,7 @@
 - 개발계획서: [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md)
 - 화면 시안: [docs/design/mockup.html](docs/design/mockup.html)
 - 테스트 시나리오: [docs/TEST_SCENARIOS.md](docs/TEST_SCENARIOS.md)
+- 인수인계서 (PC 웹 서비스 버전): [docs/HANDOVER.md](docs/HANDOVER.md)
 - 앱 소스: [app/](app/)
 
 ## 실행 방법
