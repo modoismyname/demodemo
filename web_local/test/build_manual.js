@@ -259,13 +259,6 @@ async function screenshots(browser) {
   await shot(page2.locator('#dialog .box'), '20-bad-file.png');
   fs.unlinkSync(bad);
   fs.unlinkSync(jsonPath);
-
-  // 다크 모드
-  const dark = await newPage(browser, { colorScheme: 'dark' });
-  await seed(dark, ids.slice(0, 14));
-  await dark.click('#buildBtn');
-  await hideToast(dark);
-  await shot(dark, '21-dark.png');
 }
 
 async function buildPdf(browser) {

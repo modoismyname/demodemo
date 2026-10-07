@@ -131,12 +131,32 @@ flutter build web --release --no-web-resources-cdn   # 결과: app/build/web (�
 
 ## 7. 남은 일과 결정 대기 사항
 
-- [ ] `docs/TEST_SCENARIOS.md` 사용자 컨펌 (👀 항목은 사용자가 직접 확인)
-- [ ] 호스팅 선택: GitHub Pages(무료이지만 비공개 저장소는 유료 플랜 필요), Netlify 또는 Cloudflare Pages(무료, 비공개 저장소 가능), Firebase Hosting
-- [ ] 별도 버전 관리 방식: 새 브랜치 또는 `app_pc/` 같은 새 폴더
-- [ ] PC 최적화 범위: 단축키, 넓은 화면 레이아웃 등
+> **2026-10-07 갱신:** PC 버전은 사용자 결정에 따라 호스팅 없이 **로컬 PC에서 HTML/JS로 실행하는 버전**(`web_local/`)으로 완료했습니다. 아래 "로컬 PC 버전 완료 기록"을 보세요.
+
+- [ ] `docs/TEST_SCENARIOS.md` (Flutter 버전) 사용자 컨펌 (👀 항목은 사용자가 직접 확인)
+- [x] ~~호스팅 선택~~ → 사용자 결정: DB, WAS, 웹 서버 없이 로컬 PC에서 실행. 호스팅하지 않음
+- [x] 별도 버전 관리 방식 → 새 폴더 `web_local/` (브랜치 `claude/eager-goldberg-o530vn`)
+- [x] PC 최적화 범위 → 넓은 화면 배치, 키보드 단축키, 이름 검색, 명단 내보내기/가져오기
 - [ ] (선택) 알려진 제한 개선: 휴대폰에서 드래그할 때 자동 스크롤
 - [ ] (v2) AI 검토 기능. 도입하면 API 키를 숨길 서버리스 프록시가 필요합니다.
+
+## 7-1. 로컬 PC 버전 완료 기록 (v1.0 최종본, 2026-10-07)
+
+| 항목 | 위치 | 상태 |
+|---|---|---|
+| 앱 (순수 HTML/CSS/JS, `index.html` 더블클릭 실행) | `web_local/` | **최종본 확정** |
+| 사용자 설명서 (화면용, 앱에서 [사용설명서]/F1로 열기) | `web_local/manual.html` | 완료 |
+| 사용자 설명서 PDF (A4 31쪽) | `web_local/manual/futsal_user_manual.pdf` | 완료 |
+| 테스트 시나리오 | `docs/LOCAL_WEB_TEST_SCENARIOS.md` | 최종 확정 |
+| 단위 테스트 / 브라우저 자동 점검 / 설명서 생성 | `web_local/test/` | 16개 / 70여 항목 통과 |
+
+- 제작자 표시: **박재욱 (FcSEBRO)** — 앱 화면 아래, 단축키 창, 설명서 표지와 모든 쪽 바닥글
+- 작업 브랜치: `claude/eager-goldberg-o530vn` (원본 브랜치 기준으로 시작). `main`에는 아직 병합되지 않았습니다.
+- JSON 편성표 형식(schemaVersion 1)은 Flutter 버전과 호환됩니다.
+- 배포: `web_local` 폴더에서 `test/`를 뺀 나머지를 zip으로 묶어 전달합니다.
+- 화면이나 설명서 내용을 바꾸면 `web_local/test/build_manual.js`로 화면 사진과 PDF를 다시 만듭니다(`--pdf-only`는 PDF만).
+- 함정: `file://`에서 동작해야 하므로 ES 모듈, fetch, 외부 CDN을 쓰지 마세요. 이모지 대신 SVG 아이콘을 씁니다.
+- 남은 선택 과제: 실제 Windows PC에서 👀 항목 최종 확인, (원하면) `main` 병합 PR, v2 AI 검토 기능
 
 ## 8. 새 세션 시작용 프롬프트 (복사해서 사용)
 
