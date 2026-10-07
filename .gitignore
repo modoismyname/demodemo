@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Flutter 앱 소스 (위의 lib/ 규칙 예외)
+!app/lib/
