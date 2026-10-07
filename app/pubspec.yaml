@@ -1,0 +1,35 @@
+name: futsal_team_balancer
+description: "풋살 경기 전 참석 선수로 균형 잡힌 팀을 편성하는 웹 앱"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.3
+  pdf: ^3.13.1
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.6
+  uuid: ^4.6.0
+  web: ^1.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  # 앱 화면용 한글 폰트 (시작 시 로드)
+  fonts:
+    - family: NotoSansKR
+      fonts:
+        - asset: assets/fonts/NotoSansKR-Regular.ttf
+  # PDF와 공유 이미지에서 필요할 때만 불러오는 굵은 글꼴
+  assets:
+    - assets/fonts/NotoSansKR-Bold.ttf

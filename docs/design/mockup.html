@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>풋살 팀 밸런서 시안</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6f4; --surface:#ffffff; --surface2:#eef2ee; --text:#1b1f1c; --muted:#5f6b63;
+  --primary:#1f7a4d; --primary-weak:#d9efe3; --on-primary:#fff; --border:#d7ded9; --danger:#c0392b; --warn:#b26a00;
+  --teamA:#2563eb; --teamB:#dc2626; --teamC:#d97706; --teamD:#7c3aed; --bench:#6b7280;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111513; --surface:#1a201c; --surface2:#222a25; --text:#e7ece8; --muted:#9aa79f;
+    --primary:#4cc38a; --primary-weak:#1d3a2b; --on-primary:#0b1a12; --border:#2f3933; --danger:#ff6b5e; --warn:#f0a940;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111513; --surface:#1a201c; --surface2:#222a25; --text:#e7ece8; --muted:#9aa79f;
+  --primary:#4cc38a; --primary-weak:#1d3a2b; --on-primary:#0b1a12; --border:#2f3933; --danger:#ff6b5e; --warn:#f0a940;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans KR",system-ui,sans-serif;font-size:15px}
+.note{max-width:1100px;margin:16px auto 0;padding:0 16px;color:var(--muted);font-size:13px}
+.app{max-width:1100px;margin:12px auto 40px;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--primary);color:var(--on-primary)}
+header h1{font-size:18px;margin:0;font-weight:700}
+nav{display:flex;gap:4px;margin-left:auto}
+nav button{background:transparent;border:0;color:var(--on-primary);opacity:.75;padding:8px 14px;border-radius:999px;font:inherit;cursor:pointer}
+nav button.on{opacity:1;background:rgba(255,255,255,.18);font-weight:700}
+main{padding:20px}
+.screen{display:none}.screen.on{display:block}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--border);background:var(--surface);color:var(--text);padding:9px 16px;border-radius:10px;font:inherit;cursor:pointer;white-space:nowrap}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+h2{font-size:16px;margin:0 0 12px}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:center}
+th:first-child,td:first-child{text-align:left}
+th{font-size:13px;color:var(--muted);font-weight:500}
+.lv{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.lv span{width:28px;padding:4px 0;text-align:center;cursor:pointer;font-size:13px}
+.lv span.on{background:var(--primary);color:var(--on-primary);font-weight:700}
+.sum{font-weight:700;color:var(--primary)}
+.grid2{display:grid;grid-template-columns:300px 1fr;gap:16px}
+.att{max-height:440px;overflow:auto}
+.att label{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+.att label small{margin-left:auto;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--primary);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--primary);padding:8px 14px;font:inherit;cursor:pointer}
+.seg button.on{background:var(--primary);color:var(--on-primary);font-weight:700}
+.status{padding:10px 12px;border-radius:10px;background:var(--primary-weak);font-weight:500}
+.status.bad{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px}
+.team{border:1px solid var(--border);border-top:5px solid var(--tc);border-radius:12px;background:var(--surface);min-height:120px}
+.team h3{margin:0;padding:10px 12px;font-size:15px;display:flex;justify-content:space-between}
+.team h3 b{color:var(--tc)}
+.team ul{list-style:none;margin:0;padding:0 8px 8px;min-height:40px}
+.team li{display:flex;justify-content:space-between;padding:7px 8px;margin-top:4px;border-radius:8px;background:var(--surface2);cursor:grab}
+.team li.dragging{opacity:.4}
+.team.over{outline:2px dashed var(--tc)}
+.team .stats{display:grid;grid-template-columns:repeat(5,1fr);font-size:11px;color:var(--muted);text-align:center;padding:6px 8px 10px;border-top:1px solid var(--border)}
+.team .stats b{display:block;font-size:13px;color:var(--text)}
+.warn{color:var(--warn);font-size:12px;padding:0 12px 8px}
+.locked .team li{cursor:default}
+.team li.slot{background:transparent;border:1.5px dashed var(--border);color:var(--muted);justify-content:center;cursor:default;font-size:13px}
+.team li.slot.over{border-color:var(--tc);color:var(--tc)}
+.badge{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--primary);color:var(--on-primary);margin-left:8px}
+.pdf{background:#fff;color:#111;max-width:640px;margin:0 auto;padding:36px 40px;border:1px solid #ccc;box-shadow:0 4px 18px rgba(0,0,0,.12);aspect-ratio:1/1.414;font-size:13px}
+.pdf h2{font-size:20px;text-align:center;margin-bottom:4px}
+.pdf .sub{text-align:center;color:#555;margin-bottom:18px}
+.pdf table{margin-bottom:14px}.pdf th,.pdf td{border:1px solid #999;padding:5px;color:#111}
+.pdf th{background:#eee;color:#111}
+.callout{margin-top:16px;font-size:13px;color:var(--muted);border-left:3px solid var(--primary);padding-left:10px}
+@media (max-width:760px){
+  .grid2{grid-template-columns:1fr}
+  header{flex-wrap:wrap}nav{margin-left:0}
+  main{padding:14px}
+  .pl-table thead{display:none}
+  .pl-table tr{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:12px 0;border-bottom:1px solid var(--border)}
+  .pl-table td{border:0;padding:0;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .pl-table td[data-l]::before{content:attr(data-l);font-size:12px;color:var(--muted)}
+  .pl-table td.nm{font-weight:700;font-size:16px}
+  .pdf{padding:20px}
+}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal.on{display:flex}
+.modal .box{background:var(--surface);border-radius:16px;padding:18px;max-width:440px;width:100%;max-height:92vh;overflow:auto}
+.modal img{width:100%;border-radius:10px;border:1px solid var(--border);display:block;margin:10px 0}
+.toast{font-size:13px;color:var(--primary);min-height:18px}
+</style>
+</head>
+<body>
+<p class="note">화면 디자인 시안입니다. 탭, 참석 체크, 팀 구성, 드래그, 팀 확정 버튼을 직접 눌러볼 수 있습니다. 데이터는 예시이며 저장되지 않습니다.</p>
+<div class="app" id="app">
+  <header>
+    <h1>⚽ 풋살 팀 밸런서</h1>
+    <nav>
+      <button class="on" data-tab="match">경기 편성</button>
+      <button data-tab="players">선수 관리</button>
+      <button data-tab="pdf">PDF 미리보기</button>
+    </nav>
+  </header>
+  <main>
+    <!-- 경기 편성 -->
+    <section class="screen on" id="match">
+      <div class="row" style="margin-bottom:16px">
+        <label>경기 날짜 <input type="date" id="date" class="btn" value="2026-10-11"></label>
+        <div class="seg" id="tcount">
+          <button class="on" data-k="2">2팀</button>
+          <button data-k="3">3팀</button>
+        </div>
+        <div class="seg" id="mode">
+          <button class="on" data-m="balanced">평준화</button>
+          <button data-m="tiered">전문화</button>
+        </div>
+        <div style="margin-left:auto" class="row">
+          <button class="btn" id="load">불러오기</button>
+          <button class="btn primary" id="build">팀 구성</button>
+          <button class="btn" id="confirm" disabled>팀 확정</button>
+          <button class="btn" id="print" disabled>출력</button>
+          <button class="btn" id="share" disabled>공유</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;margin-bottom:6px">
+            <h2 style="margin:0">참석 체크</h2>
+            <button class="btn" id="all" style="padding:4px 10px;font-size:13px">전체 선택</button>
+          </div>
+          <div class="att" id="att"></div>
+        </div>
+        <div>
+          <div class="status" id="status"></div>
+          <div id="result"></div>
+          <p class="callout">팀 구성 후 선수를 끌어서 다른 팀의 빈 슬롯이나 교체대기로 옮길 수 있습니다. 다른 선수 위에 놓으면 두 선수를 맞바꿉니다. 팀마다 빈 슬롯 2개가 있습니다. [팀 확정]을 누르면 편집이 잠기고 JSON 파일로 저장됩니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 선수 관리 -->
+    <section class="screen" id="players">
+      <div class="row" style="margin-bottom:12px">
+        <h2 style="margin:0">선수 목록 <span style="color:var(--muted);font-weight:400" id="pcount"></span></h2>
+        <div style="margin-left:auto" class="row">
+          <input class="btn" placeholder="이름 입력" id="newname" style="width:140px">
+          <button class="btn primary" id="add">+ 선수 추가</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+      <table class="pl-table">
+        <thead><tr><th>이름</th><th></th><th>활동량</th><th>스피드</th><th>개인기</th><th>협동력</th><th>컨디션</th><th>합계</th></tr></thead>
+        <tbody id="ptable"></tbody>
+      </table>
+      </div>
+      <p class="callout">능력치는 각 항목에서 1·2·3을 누르면 바로 바뀌고 자동 저장됩니다. 이름을 누르면 수정할 수 있습니다.</p>
+    </section>
+
+    <!-- PDF -->
+    <section class="screen" id="pdf">
+      <div class="pdf" id="pdfbody"></div>
+      <p class="callout" style="max-width:640px;margin:16px auto 0">[출력] 버튼을 누르면 이 형식의 A4 PDF가 만들어집니다. 팀 확정 전에는 출력 버튼이 꺼져 있습니다.</p>
+    </section>
+  </main>
+</div>
+
+<div class="modal" id="shareModal"><div class="box">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0">팀 명단 공유</h2><button class="btn" id="closeShare" style="padding:4px 10px">닫기</button></div>
+  <img id="shareImg" alt="팀 명단 이미지">
+  <div class="row"><button class="btn primary" id="copyImg">이미지 복사</button><button class="btn" id="saveImg">이미지 저장</button></div>
+  <div class="toast" id="toast"></div>
+</div></div>
+<script>
+const STATS=[["stamina","활동량"],["speed","스피드"],["skill","개인기"],["teamwork","협동력"],["condition","컨디션"]];
+const names=["김민수","이준호","박지훈","최영진","정우성","강동원","조현우","윤성민","장재원","임도현","한승우","오세훈","서진우","신태양","권혁준","황보람","송민재","유재석"];
+let seed=7;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+let players=names.map((n,i)=>({id:i,name:n,stats:Object.fromEntries(STATS.map(([k])=>[k,1+Math.floor(rnd()*3)])),att:i<14}));
+let mode="balanced",teamCount=2,teams=null,caps=[],bench=[],locked=false;
+const SLOTS=2;
+const total=p=>STATS.reduce((a,[k])=>a+p.stats[k],0);
+const COLORS=["--teamA","--teamB","--teamC","--teamD"];
+
+// 선택한 팀 수(2 또는 3)로 고르게 나누고, 팀당 7명을 넘는 인원은 교체대기
+function plan(n,k=teamCount){
+  if(n<5*k) return null;
+  const onTeams=Math.min(n,7*k),base=Math.floor(onTeams/k),extra=onTeams%k;
+  return {sizes:[...Array(k).keys()].map(i=>base+(i<extra?1:0)),bench:n-onTeams};
+}
+function shuffle(a){return a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1])}
+
+function build(){
+  const att=players.filter(p=>p.att),pl=plan(att.length);if(!pl)return;
+  let pool=shuffle(att);bench=pool.splice(0,pl.bench);
+  pool.sort((a,b)=>total(b)-total(a));
+  const k=pl.sizes.length;teams=pl.sizes.map(()=>[]);caps=pl.sizes.map(s=>s+SLOTS);
+  if(mode==="tiered"){let i=0;pl.sizes.forEach((s,t)=>{teams[t]=pool.slice(i,i+s);i+=s});}
+  else{
+    let order=[];let fwd=true;
+    while(order.length<pool.length){const r=[...Array(k).keys()];(fwd?r:r.reverse()).forEach(t=>order.push(t));fwd=!fwd}
+    let idx=0;pool.forEach(p=>{while(teams[order[idx]].length>=pl.sizes[order[idx]])idx++;teams[order[idx]].push(p);idx++});
+    // swap improvement
+    const cost=()=>{const s=teams.map(t=>t.reduce((a,p)=>a+total(p),0));let c=(Math.max(...s)-Math.min(...s))*10;
+      STATS.forEach(([key])=>{const v=teams.map(t=>t.reduce((a,p)=>a+p.stats[key],0)/t.length);c+=Math.max(...v)-Math.min(...v)});return c};
+    let improved=true;
+    while(improved){improved=false;
+      for(let a=0;a<k;a++)for(let b=a+1;b<k;b++)for(let i=0;i<teams[a].length;i++)for(let j=0;j<teams[b].length;j++){
+        const c0=cost();[teams[a][i],teams[b][j]]=[teams[b][j],teams[a][i]];
+        if(cost()<c0-1e-9)improved=true;else [teams[a][i],teams[b][j]]=[teams[b][j],teams[a][i]];
+      }}
+  }
+  locked=false;render();
+}
+
+function teamCard(list,title,color,key,warn){
+  const sums=Object.fromEntries(STATS.map(([k])=>[k,list.reduce((a,p)=>a+p.stats[k],0)]));
+  const tot=list.reduce((a,p)=>a+total(p),0);
+  return `<div class="team" style="--tc:var(${color})" data-key="${key}">
+    <h3><b>${title}</b><span>${list.length}명 · 총점 ${tot}</span></h3>
+    ${warn?`<div class="warn">⚠ 팀 인원은 5~7명이어야 합니다</div>`:""}
+    <ul>${list.map(p=>`<li draggable="${!locked}" data-id="${p.id}"><span>${p.name}</span><span class="sum">${total(p)}</span></li>`).join("")}${key==="bench"||locked?"":`<li class="slot" data-slot="1">빈 슬롯</li>`.repeat(Math.max(0,caps[key]-list.length))}</ul>
+    ${key==="bench"?"":`<div class="stats">${STATS.map(([k,l])=>`<div><b>${sums[k]}</b>${l}</div>`).join("")}</div>`}
+  </div>`;
+}
+
+function render(){
+  // attendance
+  document.getElementById("att").innerHTML=players.map(p=>`<label><input type="checkbox" data-id="${p.id}" ${p.att?"checked":""} ${locked?"disabled":""}> ${p.name}<small>${total(p)}점</small></label>`).join("");
+  const n=players.filter(p=>p.att).length,pl=plan(n),st=document.getElementById("status");
+  if(!pl){st.className="status bad";st.textContent=`참석 ${n}명 · ${teamCount}팀 경기 불가 (최소 ${teamCount*5}명 필요)`}
+  else{st.className="status";st.textContent=`참석 ${n}명 → `+pl.sizes.map((s,i)=>`${"ABCD"[i]}팀 ${s}명`).join(" + ")+(pl.bench?` + 교체대기 ${pl.bench}명`:"")}
+  document.getElementById("build").disabled=!pl||locked;
+  document.getElementById("build").textContent=teams&&!locked?"다시 구성":"팀 구성";
+  document.getElementById("confirm").disabled=!teams||locked;
+  document.getElementById("confirm").textContent=locked?"확정됨":"팀 확정";
+  document.getElementById("print").disabled=!locked;
+  document.getElementById("share").disabled=!locked;
+  const res=document.getElementById("result");
+  if(teams){
+    res.innerHTML=`<div class="teams ${locked?"locked":""}">`+teams.map((t,i)=>teamCard(t,"ABCD"[i]+"팀",COLORS[i],i,t.length<5||t.length>7)).join("")+
+      (bench.length?teamCard(bench,"교체대기","--bench","bench"):"")+`</div>`;
+    bindDrag();
+  } else res.innerHTML="";
+  // players
+  document.getElementById("pcount").textContent=`${players.length}명`;
+  document.getElementById("ptable").innerHTML=players.map(p=>`<tr><td class="nm">${p.name}</td><td style="justify-content:flex-end"><button class="btn" data-del="${p.id}" style="padding:4px 10px;color:var(--danger)">삭제</button></td>${STATS.map(([k,l])=>`<td data-l="${l}"><span class="lv">${[1,2,3].map(v=>`<span data-id="${p.id}" data-k="${k}" data-v="${v}" class="${p.stats[k]===v?"on":""}">${v}</span>`).join("")}</span></td>`).join("")}<td class="sum" data-l="합계">${total(p)}</td></tr>`).join("");
+  // pdf
+  const d=document.getElementById("date").value;
+  document.getElementById("pdfbody").innerHTML=`<h2>풋살 팀 편성표</h2><div class="sub">경기일 ${d} · ${mode==="balanced"?"평준화":"전문화"} 편성</div>`+
+    (locked?teams.map((t,i)=>`<table><thead><tr><th colspan="7" style="text-align:left">${"ABCD"[i]}팀 (${t.length}명)</th></tr><tr><th>이름</th>${STATS.map(s=>`<th>${s[1]}</th>`).join("")}<th>합계</th></tr></thead><tbody>${t.map(p=>`<tr><td>${p.name}</td>${STATS.map(([k])=>`<td>${p.stats[k]}</td>`).join("")}<td>${total(p)}</td></tr>`).join("")}</tbody></table>`).join("")+
+      (bench.length?`<p><b>교체대기:</b> ${bench.map(p=>p.name).join(", ")}</p>`:""):`<p style="text-align:center;color:#777;margin-top:80px">경기 편성 탭에서 팀 구성 → 팀 확정을 누르면<br>여기에 편성표가 표시됩니다.</p>`);
+}
+
+function listOf(key){return key==="bench"?bench:teams[+key]}
+function bindDrag(){
+  if(locked)return;let dragId=null;
+  document.querySelectorAll(".team li").forEach(li=>{
+    li.ondragstart=e=>{dragId=+li.dataset.id;li.classList.add("dragging");e.dataTransfer.setData("text","x")};
+    li.ondragend=()=>li.classList.remove("dragging");
+  });
+  document.querySelectorAll(".team").forEach(card=>{
+    card.ondragover=e=>{e.preventDefault();card.classList.add("over")};
+    card.ondragleave=()=>card.classList.remove("over");
+    card.ondrop=e=>{e.preventDefault();card.classList.remove("over");
+      const from=[...teams.map((_,i)=>i),"bench"].find(k=>listOf(k).some(p=>p.id===dragId));
+      const to=card.dataset.key;const src=listOf(from),dst=listOf(to);
+      const si=src.findIndex(p=>p.id===dragId);
+      const targetLi=e.target.closest("li");
+      if(targetLi&&targetLi.dataset.slot){if(String(from)!==String(to))dst.push(src.splice(si,1)[0])}
+      else if(targetLi&&+targetLi.dataset.id!==dragId){const di=dst.findIndex(p=>p.id===+targetLi.dataset.id);[src[si],dst[di]]=[dst[di],src[si]]}
+      else if(String(from)!==String(to)){if(to!=="bench"&&dst.length>=caps[+to]){alert("빈 슬롯이 없습니다. 선수 위에 놓아 맞바꾸세요.");return}dst.push(src.splice(si,1)[0])}
+      render();
+    };
+  });
+}
+
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===b.dataset.tab));
+});
+document.getElementById("mode").onclick=e=>{const m=e.target.dataset.m;if(!m||locked)return;mode=m;
+  document.querySelectorAll("#mode button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));if(teams)build()};
+document.getElementById("tcount").onclick=e=>{const k=+e.target.dataset.k;if(!k||locked)return;teamCount=k;
+  document.querySelectorAll("#tcount button").forEach(b=>b.classList.toggle("on",+b.dataset.k===k));teams=null;bench=[];render()};
+document.getElementById("att").onchange=e=>{const p=players.find(x=>x.id===+e.target.dataset.id);p.att=e.target.checked;teams=null;bench=[];render()};
+document.getElementById("all").onclick=()=>{if(locked)return;const on=!players.every(p=>p.att);players.forEach(p=>p.att=on);teams=null;render()};
+document.getElementById("build").onclick=build;
+document.getElementById("confirm").onclick=()=>{
+  if(teams.some(t=>t.length<5||t.length>7)){alert("팀 인원이 5~7명이 아닌 팀이 있습니다.");return}
+  locked=true;render();alert(`팀이 확정되었습니다.\nfutsal_teams_${document.getElementById("date").value}.json 파일로 저장됩니다. (시안)`)};
+document.getElementById("print").onclick=()=>document.querySelector('nav button[data-tab="pdf"]').click();
+document.getElementById("load").onclick=()=>alert("JSON 파일을 선택하면 해당 날짜와 편성표가 복원되고, 다시 편집할 수 있습니다. (시안)");
+document.getElementById("date").onchange=render;
+document.getElementById("ptable").onclick=e=>{
+  const s=e.target.dataset;
+  if(s.v){players.find(p=>p.id===+s.id).stats[s.k]=+s.v;render()}
+  if(s.del!==undefined){players=players.filter(p=>p.id!==+s.del);teams=null;render()}
+};
+document.getElementById("add").onclick=()=>{const n=document.getElementById("newname").value.trim();if(!n)return;
+  players.push({id:Date.now(),name:n,stats:Object.fromEntries(STATS.map(([k])=>[k,2])),att:false});document.getElementById("newname").value="";render()};
+const TEAM_HEX=["#2563eb","#dc2626","#d97706","#7c3aed"];
+let shareBlob=null;
+function makeShareImage(){
+  const groups=teams.map((t,i)=>({title:"ABCD"[i]+"팀",color:TEAM_HEX[i],names:t.map(p=>p.name)}));
+  if(bench.length)groups.push({title:"교체대기",color:"#6b7280",names:bench.map(p=>p.name)});
+  const cols=Math.min(groups.length,2),rows=Math.ceil(groups.length/cols);
+  const maxN=Math.max(...groups.map(g=>g.names.length));
+  const W=720,pad=32,cw=(W-pad*2-20*(cols-1))/cols,ch=64+maxN*40+16,H=130+rows*(ch+20)+30;
+  const c=document.createElement("canvas");c.width=W*2;c.height=H*2;const x=c.getContext("2d");x.scale(2,2);
+  const F='"Noto Sans KR",sans-serif';
+  x.fillStyle="#f4f6f4";x.fillRect(0,0,W,H);
+  x.fillStyle="#1f7a4d";x.fillRect(0,0,W,96);
+  x.fillStyle="#fff";x.font=`700 28px ${F}`;x.fillText("⚽ 풋살 팀 편성",pad,52);
+  const d=new Date(document.getElementById("date").value+"T00:00");
+  x.font=`400 17px ${F}`;x.fillText(`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${"일월화수목금토"[d.getDay()]})`,pad,80);
+  groups.forEach((g,i)=>{
+    const gx=pad+(i%cols)*(cw+20),gy=120+Math.floor(i/cols)*(ch+20);
+    x.fillStyle="#fff";x.beginPath();x.roundRect(gx,gy,cw,ch,14);x.fill();
+    x.fillStyle=g.color;x.beginPath();x.roundRect(gx,gy,cw,52,[14,14,0,0]);x.fill();
+    x.fillStyle="#fff";x.font=`700 22px ${F}`;x.fillText(g.title,gx+18,gy+34);
+    x.font=`400 16px ${F}`;x.textAlign="right";x.fillText(`${g.names.length}명`,gx+cw-18,gy+33);x.textAlign="left";
+    x.fillStyle="#1b1f1c";x.font=`500 19px ${F}`;
+    g.names.forEach((n,j)=>x.fillText(`${j+1}. ${n}`,gx+22,gy+90+j*40));
+  });
+  return new Promise(r=>c.toBlob(b=>{shareBlob=b;document.getElementById("shareImg").src=URL.createObjectURL(b);r()},"image/png"));
+}
+const toast=t=>{document.getElementById("toast").textContent=t};
+document.getElementById("share").onclick=async()=>{await document.fonts.ready;await makeShareImage();toast("");document.getElementById("shareModal").classList.add("on")};
+document.getElementById("closeShare").onclick=()=>document.getElementById("shareModal").classList.remove("on");
+document.getElementById("copyImg").onclick=async()=>{
+  try{await navigator.clipboard.write([new ClipboardItem({"image/png":shareBlob})]);toast("복사했습니다. 카톡 대화창에 붙여 넣으세요.")}
+  catch(e){
+    const f=new File([shareBlob],"teams.png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]});return}catch(_){}}
+    toast("이 브라우저는 이미지 복사를 지원하지 않습니다. [이미지 저장]을 이용하세요.")}
+};
+document.getElementById("saveImg").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(shareBlob);a.download=`futsal_teams_${document.getElementById("date").value}.png`;a.click()};
+render();
+</script>
+</body>
+</html>
