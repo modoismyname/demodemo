@@ -1,7 +1,12 @@
-# 풋살 팀 밸런서 — 로컬 PC 웹 버전 (HTML/JS)
+# 풋살 팀 밸런서 — 로컬 PC 웹 버전 (HTML/JS) v1.0 최종본
 
 Flutter 버전(`app/`)과 같은 기능을 **순수 HTML·CSS·JavaScript**로 다시 만든 별도 버전입니다.
 DB, WAS, 웹 서버가 필요 없습니다. 폴더를 PC에 두고 `index.html`을 더블클릭하면 브라우저에서 바로 실행됩니다.
+
+## 사용자 설명서
+
+- 화면용: [manual.html](manual.html) — 앱 오른쪽 위 [사용설명서] 버튼, 화면 맨 아래 링크, 또는 `F1` 키로 언제든 열 수 있습니다.
+- PDF(인쇄용): [manual/futsal_user_manual.pdf](manual/futsal_user_manual.pdf)
 
 ## 실행 방법
 
@@ -61,14 +66,17 @@ DB, WAS, 웹 서버가 필요 없습니다. 폴더를 PC에 두고 `index.html`�
 
 ```
 web_local/
-├─ index.html        # 화면 구조
+├─ index.html        # 화면 구조 (시작 파일)
+├─ manual.html       # 사용자 설명서 (화면용)
+├─ manual/           # 설명서 PDF와 화면 사진
 ├─ css/style.css     # 디자인 (라이트/다크 모드)
 ├─ js/core.js        # 순수 로직: 인원 규칙, 평준화/전문화, 드래그 이동, JSON 형식
 ├─ js/output.js      # PDF(캔버스 → JPEG → PDF)와 공유 PNG 그리기
 ├─ js/app.js         # 화면 동작, 저장소, 단축키
 └─ test/
    ├─ core.test.js   # 로직 단위 테스트 (node --test web_local/test/core.test.js)
-   └─ e2e.js         # 브라우저 자동 점검 (Playwright, file:// 로 실행)
+   ├─ e2e.js         # 브라우저 자동 점검 (Playwright, file:// 로 실행)
+   └─ build_manual.js # 설명서 화면 사진 촬영 + PDF 생성
 ```
 
 `file://`로 열어도 동작하도록 ES 모듈 대신 일반 `<script>`를 씁니다.
@@ -77,5 +85,6 @@ web_local/
 
 ```bash
 node --test web_local/test/core.test.js                     # 단위 테스트 16개
-NODE_PATH=<playwright 설치 경로>/node_modules node web_local/test/e2e.js   # 브라우저 점검 60여 항목
+NODE_PATH=<playwright 설치 경로>/node_modules node web_local/test/e2e.js            # 브라우저 점검 60여 항목
+NODE_PATH=<playwright 설치 경로>/node_modules node web_local/test/build_manual.js   # 설명서 사진과 PDF 다시 만들기 (--pdf-only: PDF만)
 ```

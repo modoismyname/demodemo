@@ -874,6 +874,11 @@
   }
 
   document.addEventListener('keydown', function (e) {
+    if (e.key === 'F1') {
+      e.preventDefault();
+      window.open('manual.html', '_blank', 'noopener');
+      return;
+    }
     var modal = openModalId();
     if (e.key === 'Escape' && modal) {
       e.preventDefault();

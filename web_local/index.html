@@ -19,7 +19,13 @@
       <button role="tab" data-tab="players" title="Alt+2">선수 관리</button>
       <button role="tab" data-tab="preview" title="Alt+3">PDF 미리보기</button>
     </nav>
-    <button class="ghost" id="helpBtn" title="단축키 (?)">단축키</button>
+    <div class="top-links">
+      <a class="ghost manual-link" id="manualLink" href="manual.html" target="_blank" rel="noopener" title="사용자 설명서 (F1)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v16H7.5a2.5 2.5 0 0 0 0 5H19v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 4.5v16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        사용설명서
+      </a>
+      <button class="ghost" id="helpBtn" title="단축키 (?)">단축키</button>
+    </div>
   </header>
 
   <div class="notice" id="storageNotice" hidden>
@@ -126,6 +132,9 @@
       <div class="preview" id="preview"></div>
     </section>
   </main>
+  <footer class="app-footer">
+    풋살 팀 밸런서 v1.0 · 로컬 PC 버전 · <a href="manual.html" target="_blank" rel="noopener">사용자 설명서</a> · <a href="manual/futsal_user_manual.pdf" target="_blank" rel="noopener">설명서 PDF</a>
+  </footer>
 </div>
 
 <!-- 공유 창 -->
@@ -169,6 +178,7 @@
       <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>경기일 하루 전 / 하루 뒤</td></tr>
       <tr><td><kbd>/</kbd></td><td>이름 검색 칸으로 이동</td></tr>
       <tr><td><kbd>Esc</kbd></td><td>창 닫기, 이름 수정 취소</td></tr>
+      <tr><td><kbd>F1</kbd></td><td>사용자 설명서 열기 (새 탭)</td></tr>
       <tr><td><kbd>?</kbd></td><td>이 도움말</td></tr>
     </table>
   </div>

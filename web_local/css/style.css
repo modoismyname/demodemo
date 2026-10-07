@@ -69,7 +69,12 @@ h2 { font-size: 16px; margin: 0; }
 }
 .tabs button:hover, .ghost:hover { opacity: 1; background: rgba(255, 255, 255, .12); }
 .tabs button.on { opacity: 1; background: rgba(255, 255, 255, .2); font-weight: 700; }
-.ghost { margin-left: auto; font-size: 13px; }
+.ghost { font-size: 13px; text-decoration: none; }
+.top-links { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.manual-link { display: inline-flex; align-items: center; gap: 6px; opacity: 1; font-weight: 700; background: rgba(255, 255, 255, .14); }
+.manual-link svg { width: 16px; height: 16px; }
+.app-footer { padding: 14px 24px 22px; font-size: 12px; color: var(--muted); text-align: center; }
+.app-footer a { color: var(--primary); }
 
 .notice { background: var(--warn); color: #fff; padding: 8px 24px; font-size: 13px; }
 
@@ -244,6 +249,7 @@ kbd {
   .attendance { position: static; max-height: 360px; }
   .topbar { flex-wrap: wrap; padding: 10px 16px; }
   .tabs { margin-left: 0; order: 3; width: 100%; }
+  .top-links { order: 2; }
   main { padding: 16px; }
   .right { margin-left: 0; }
 }

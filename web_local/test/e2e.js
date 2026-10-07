@@ -253,6 +253,19 @@ function check(cond, label) {
   check((await page.locator('#attCount').innerText()) === '17/17' && await page.locator('.team').count() === 0,
     'A-6/B-6 참석에서 빠지고 편성 초기화');
 
+  // 사용자 설명서 링크
+  const [manualTab] = await Promise.all([context.waitForEvent('page'), page.click('#manualLink')]);
+  await manualTab.waitForLoadState();
+  check((await manualTab.title()).includes('사용자 설명서'), '설명서 링크로 새 탭 열림');
+  check(await manualTab.locator('img').count() > 15 &&
+    await manualTab.evaluate(() => Array.from(document.images).every((i) => i.naturalWidth > 0)), '설명서 그림 표시');
+  const pdfHref = await manualTab.locator('.bar a').first().getAttribute('href');
+  check(fs.existsSync(path.resolve(__dirname, '..', pdfHref)), '설명서 PDF 파일 존재');
+  await manualTab.close();
+  const [f1Tab] = await Promise.all([context.waitForEvent('page'), page.keyboard.press('F1')]);
+  check(f1Tab.url().endsWith('manual.html'), 'F1로 설명서 열기');
+  await f1Tab.close();
+
   // 좁은 화면
   await page.setViewportSize({ width: 820, height: 900 });
   await page.screenshot({ path: path.join(SHOTS, '6-narrow.png'), fullPage: true });
