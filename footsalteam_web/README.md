@@ -12,7 +12,7 @@ DB, WAS, 웹 서버가 필요 없습니다. 폴더를 PC에 두고 `index.html`�
 
 ## 실행 방법
 
-1. `web_local` 폴더를 통째로 PC에 복사합니다 (예: `C:\futsal\web_local`).
+1. `footsalteam_web` 폴더를 통째로 PC에 복사합니다 (예: `C:\futsal\footsalteam_web`).
 2. `index.html`을 더블클릭합니다. Chrome 또는 Edge를 권장합니다.
 3. 자주 쓰면 브라우저 즐겨찾기에 추가하거나 바탕화면에 바로가기를 만들어 두세요.
 
@@ -67,7 +67,7 @@ DB, WAS, 웹 서버가 필요 없습니다. 폴더를 PC에 두고 `index.html`�
 ## 파일 구조
 
 ```
-web_local/
+footsalteam_web/
 ├─ index.html        # 화면 구조 (시작 파일)
 ├─ manual.html       # 사용자 설명서 (화면용)
 ├─ manual/           # 설명서 PDF와 화면 사진
@@ -76,7 +76,7 @@ web_local/
 ├─ js/output.js      # PDF(캔버스 → JPEG → PDF)와 공유 PNG 그리기
 ├─ js/app.js         # 화면 동작, 저장소, 단축키
 └─ test/
-   ├─ core.test.js   # 로직 단위 테스트 (node --test web_local/test/core.test.js)
+   ├─ core.test.js   # 로직 단위 테스트 (node --test footsalteam_web/test/core.test.js)
    ├─ e2e.js         # 브라우저 자동 점검 (Playwright, file:// 로 실행)
    └─ build_manual.js # 설명서 화면 사진 촬영 + PDF 생성
 ```
@@ -86,7 +86,7 @@ web_local/
 ## 개발자용 테스트
 
 ```bash
-node --test web_local/test/core.test.js                     # 단위 테스트 16개
-NODE_PATH=<playwright 설치 경로>/node_modules node web_local/test/e2e.js            # 브라우저 점검 60여 항목
-NODE_PATH=<playwright 설치 경로>/node_modules node web_local/test/build_manual.js   # 설명서 사진과 PDF 다시 만들기 (--pdf-only: PDF만)
+node --test footsalteam_web/test/core.test.js                     # 단위 테스트 16개
+NODE_PATH=<playwright 설치 경로>/node_modules node footsalteam_web/test/e2e.js            # 브라우저 점검 60여 항목
+NODE_PATH=<playwright 설치 경로>/node_modules node footsalteam_web/test/build_manual.js   # 설명서 사진과 PDF 다시 만들기 (--pdf-only: PDF만)
 ```

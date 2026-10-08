@@ -1,4 +1,4 @@
-// 실행: node --test web_local/test/*.test.js
+// 실행: node --test footsalteam_web/test/*.test.js
 'use strict';
 
 const test = require('node:test');

@@ -1,5 +1,5 @@
 // 사용자 설명서용 화면 사진을 찍고 manual.html을 PDF로 만든다.
-// 실행: NODE_PATH=<playwright가 설치된 node_modules> node web_local/test/build_manual.js
+// 실행: NODE_PATH=<playwright가 설치된 node_modules> node footsalteam_web/test/build_manual.js
 //   --pdf-only  화면 사진은 그대로 두고 PDF만 다시 만든다.
 'use strict';
 

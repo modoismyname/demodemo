@@ -1,12 +1,12 @@
 # 풋살 팀 밸런서 로컬 PC 웹 버전 — 테스트 시나리오 (v1.0, 최종)
 
-> 대상: `web_local/` (HTML/JS, 서버 없이 `index.html` 더블클릭으로 실행)
+> 대상: `footsalteam_web/` (HTML/JS, 서버 없이 `index.html` 더블클릭으로 실행)
 > 상태: **최종본 확정** (2026-10-07, 사용자 컨펌 완료).
 >
 > 표시: ✅ 자동 테스트(단위 테스트 또는 Chromium 자동 조작, `file://`로 실행)로 확인함 · 👀 사용자 확인 필요
 
 ## 준비
-- Windows PC에서 `web_local` 폴더를 복사하고 `index.html`을 Chrome 또는 Edge로 엽니다.
+- Windows PC에서 `footsalteam_web` 폴더를 복사하고 `index.html`을 Chrome 또는 Edge로 엽니다.
 - 처음 열면 선수 명단이 비어 있습니다.
 
 ## 0. 실행 환경
@@ -120,8 +120,8 @@
 ---
 
 ### 자동 테스트 결과 (개발 환경, Chromium)
-- 단위 테스트 16개 통과 (`node --test web_local/test/core.test.js`): 인원 규칙 0~40명, 평준화/전문화, 무작위 대기, 드래그 이동, JSON 왕복, Flutter JSON 호환, 잘못된 파일
-- 브라우저 자동 점검 60여 항목 통과 (`web_local/test/e2e.js`, `file://`로 실행)
+- 단위 테스트 16개 통과 (`node --test footsalteam_web/test/core.test.js`): 인원 규칙 0~40명, 평준화/전문화, 무작위 대기, 드래그 이동, JSON 왕복, Flutter JSON 호환, 잘못된 파일
+- 브라우저 자동 점검 60여 항목 통과 (`footsalteam_web/test/e2e.js`, `file://`로 실행)
 
 ### 알려진 제한
 - 브라우저 저장소는 브라우저마다 따로입니다. 브라우저 데이터를 지우면 명단도 지워지므로 [명단 내보내기]로 백업하세요.

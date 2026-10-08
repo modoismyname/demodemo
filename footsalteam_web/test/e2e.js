@@ -1,5 +1,5 @@
 // 브라우저 자동 점검 (Playwright + Chromium). index.html을 file:// 로 직접 연다.
-// 실행: NODE_PATH=<playwright가 설치된 node_modules> node web_local/test/e2e.js [스크린샷 폴더]
+// 실행: NODE_PATH=<playwright가 설치된 node_modules> node footsalteam_web/test/e2e.js [스크린샷 폴더]
 'use strict';
 
 const path = require('path');
