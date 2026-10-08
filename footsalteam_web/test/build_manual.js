@@ -274,7 +274,7 @@ async function buildPdf(browser) {
     displayHeaderFooter: true,
     headerTemplate: '<div></div>',
     footerTemplate: '<div style="width:100%;font-size:8px;color:#888;text-align:center;font-family:sans-serif">' +
-      '풋살 팀 밸런서 사용자 설명서 · 제작자 : 박재욱 (FcSEBRO) · ' +
+      '풋살 팀 밸런서 사용자 설명서 · 제작자 : modoismodo · ' +
       '<span class="pageNumber"></span> / <span class="totalPages"></span></div>',
   });
   console.log('  ' + path.relative(ROOT, PDF) + ' (' + Math.round(fs.statSync(PDF).size / 1024) + 'KB)');

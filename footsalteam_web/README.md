@@ -1,6 +1,6 @@
 # 풋살 팀 밸런서 — 로컬 PC 웹 버전 (HTML/JS) v1.0 최종본
 
-제작자 : 박재욱 (FcSEBRO)
+제작자 : modoismodo
 
 Flutter 버전(`app/`)과 같은 기능을 **순수 HTML·CSS·JavaScript**로 다시 만든 별도 버전입니다.
 DB, WAS, 웹 서버가 필요 없습니다. 폴더를 PC에 두고 `index.html`을 더블클릭하면 브라우저에서 바로 실행됩니다.

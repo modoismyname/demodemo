@@ -150,7 +150,7 @@ flutter build web --release --no-web-resources-cdn   # 결과: app/build/web (�
 | 테스트 시나리오 | `docs/LOCAL_WEB_TEST_SCENARIOS.md` | 최종 확정 |
 | 단위 테스트 / 브라우저 자동 점검 / 설명서 생성 | `footsalteam_web/test/` | 16개 / 70여 항목 통과 |
 
-- 제작자 표시: **박재욱 (FcSEBRO)** — 앱 화면 아래, 단축키 창, 설명서 표지와 모든 쪽 바닥글
+- 제작자 표시: **modoismodo** — 앱 화면 아래, 단축키 창, 설명서 표지와 모든 쪽 바닥글
 - 작업 브랜치: `claude/eager-goldberg-o530vn` (원본 브랜치 기준으로 시작). `main`에는 아직 병합되지 않았습니다.
 - JSON 편성표 형식(schemaVersion 1)은 Flutter 버전과 호환됩니다.
 - 배포: `footsalteam_web` 폴더에서 `test/`를 뺀 나머지를 zip으로 묶어 전달합니다.
